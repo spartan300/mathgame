@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paddington's Maths Adventure</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Georgia', serif;
+  color: #f0ead8;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+  /* British navy with a warm London fog tinge */
+  background-color: #07111f;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(1,33,105,0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 20% 100%, rgba(200,16,46,0.12) 0%, transparent 60%),
+    linear-gradient(175deg, #07111f 0%, #0c1c30 60%, #0d1a10 100%);
+}
+
+/* ── Paddington bear SVG hat decoration ── */
+.bear-header {
+  display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
+}
+.bear-icon { width: 90px; height: 90px; margin-bottom: 8px; }
+
+h1 {
+  font-size: 1.7rem; font-weight: 700;
+  color: #f0c040;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 12px rgba(200,130,10,0.5);
+  letter-spacing: 0.5px;
+}
+.subtitle { font-size: 0.82rem; color: #6a7a90; margin-bottom: 28px; font-style: italic; }
+
+/* ── Paddington Station roundel ── */
+.roundel-wrap { margin-bottom: 10px; }
+.roundel {
+  display: inline-flex; flex-direction: column; align-items: center;
+  position: relative; width: 130px; height: 44px;
+}
+.roundel-ring {
+  position: absolute; inset: 0; border-radius: 50px;
+  border: 5px solid #C8102E; background: transparent;
+}
+.roundel-bar {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 16px; background: #012169;
+  display: flex; align-items: center; justify-content: center;
+}
+.roundel-text {
+  font-size: 0.6rem; font-weight: 800; color: #fff;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: 'Segoe UI', sans-serif; white-space: nowrap;
+  position: relative; z-index: 1;
+}
+
+.card {
+  background: #0e1e38;
+  border: 2px solid #1a3a6a;
+  border-radius: 20px;
+  padding: 36px 44px;
+  width: 100%; max-width: 480px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,200,80,0.06);
+  position: relative;
+}
+
+/* marmalade jar accent top-right */
+.card::before {
+  content: '🍊';
+  position: absolute; top: 16px; right: 18px;
+  font-size: 1.4rem; opacity: 0.35;
+}
+
+.scoreboard {
+  display: flex; justify-content: space-between;
+  margin-bottom: 20px; font-size: 0.83rem; color: #4a6a90;
+  font-family: 'Segoe UI', sans-serif;
+}
+.scoreboard span { font-weight: 700; }
+.score-correct { color: #4ade80; }
+.score-streak  { color: #f0c040; }
+
+.progress-wrap { background: #06101e; border-radius: 8px; height: 6px; margin-bottom: 18px; overflow: hidden; }
+.progress-bar  { height: 100%; background: linear-gradient(90deg,#8b1a1a,#C8102E); border-radius: 8px; transition: width 0.4s; }
+
+.mastered-label { font-size: 0.73rem; color: #3a5070; margin-bottom: 6px; display: flex; justify-content: space-between; font-family: 'Segoe UI', sans-serif; }
+.mastered-wrap { background: #06101e; border-radius: 8px; height: 6px; margin-bottom: 20px; overflow: hidden; }
+.mastered-bar  { height: 100%; background: linear-gradient(90deg,#a0600a,#f0c040); border-radius: 8px; transition: width 0.4s; }
+
+.weak-spots {
+  background: #06101e; border: 1px solid #1a2e4a;
+  border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 22px; min-height: 38px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: 'Segoe UI', sans-serif;
+}
+.weak-label { font-size: 0.70rem; color: #3a5070; white-space: nowrap; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.weak-tag { background: #1a0a18; border: 1px solid #C8102E; border-radius: 6px; padding: 2px 8px; font-size: 0.76rem; color: #fca5a5; font-weight: 700; }
+.no-weak  { font-size: 0.76rem; color: #3a5040; font-style: italic; }
+
+.question {
+  text-align: center; font-size: 3.4rem; font-weight: 800;
+  color: #e8f0ff; margin-bottom: 10px; letter-spacing: -1px;
+  min-height: 72px; display: flex; align-items: center; justify-content: center;
+  text-shadow: 0 2px 12px rgba(200,16,46,0.15);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.timer-wrap { background: #06101e; border-radius: 8px; height: 4px; margin-bottom: 26px; overflow: hidden; }
+.timer-bar  { height: 100%; background: #f0c040; border-radius: 8px; width: 100%; }
+
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.choice-btn {
+  background: #0a1a30;
+  border: 2px solid #1a3a6a;
+  border-radius: 14px;
+  color: #c8dcf8;
+  font-size: 1.6rem; font-weight: 700;
+  padding: 22px 10px; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  outline: none; font-family: 'Segoe UI', sans-serif;
+}
+.choice-btn:hover:not(:disabled) { background: #122040; border-color: #f0c040; transform: translateY(-2px); }
+.choice-btn:active:not(:disabled){ transform: translateY(0); }
+.choice-btn.correct { background: #061a10; border-color: #2e8b44; color: #4ade80; }
+.choice-btn.wrong   { background: #1a060a; border-color: #C8102E; color: #f87171; }
+.choice-btn.reveal  { background: #061a10; border-color: #2e8b44; color: #4ade80; }
+.choice-btn:disabled { cursor: default; }
+
+.feedback {
+  text-align: center; margin-top: 22px;
+  font-size: 0.95rem; font-weight: 600; min-height: 28px;
+  font-family: 'Segoe UI', sans-serif; font-style: italic;
+}
+.feedback.correct-msg { color: #4ade80; }
+.feedback.wrong-msg   { color: #f87171; }
+.feedback.slow-msg    { color: #f0c040; }
+
+.next-btn {
+  display: block; width: 100%; margin-top: 18px; padding: 15px;
+  background: #C8102E; border: none; border-radius: 14px;
+  color: #fff; font-size: 1rem; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px;
+  transition: background 0.15s, transform 0.1s;
+  font-family: 'Segoe UI', sans-serif;
+}
+.next-btn:hover  { background: #a50e26; transform: translateY(-1px); }
+.next-btn:active { transform: translateY(0); }
+.next-btn.hidden { visibility: hidden; }
+
+/* ── Win overlay ── */
+#win-overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(2,6,18,0.95);
+  flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+#win-overlay.show { display: flex; }
+#fireworks-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+
+.win-card {
+  background: #0a1628; border: 2px solid #f0c040;
+  border-radius: 24px; padding: 40px 48px;
+  text-align: center; z-index: 101; max-width: 440px; width: 90%;
+  box-shadow: 0 0 70px rgba(200,16,46,0.2), 0 0 40px rgba(1,33,105,0.4);
+}
+/* bear with hat SVG in win card */
+.win-bear-svg { width: 110px; height: 110px; margin: 0 auto 10px; display: block; }
+.win-card h2 { font-size: 2rem; color: #f0c040; margin-bottom: 8px; font-family: 'Georgia', serif; }
+.win-card .win-intro { color: #6a8ab0; font-size: 0.92rem; margin-bottom: 16px; line-height: 1.7; font-style: italic; }
+.win-stat { font-size: 2.6rem; font-weight: 800; color: #4ade80; font-family: 'Segoe UI', sans-serif; }
+.win-sub  { font-size: 0.88rem; color: #6a8ab0; margin-top: 4px; margin-bottom: 18px; font-style: italic; }
+
+/* Prize banner */
+.win-prize {
+  background: #06101e; border: 2px solid #C8102E;
+  border-radius: 14px; padding: 16px 20px; margin-bottom: 22px;
+  display: flex; align-items: center; gap: 14px;
+}
+.prize-umbrella { font-size: 2.6rem; flex-shrink: 0; }
+.prize-text { text-align: left; }
+.prize-label { font-size: 0.65rem; color: #C8102E; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; font-family: 'Segoe UI', sans-serif; }
+.prize-name  { font-size: 1.0rem; font-weight: 700; color: #e8f0ff; font-family: 'Georgia', serif; }
+.prize-sub   { font-size: 0.75rem; color: #4a6a90; font-style: italic; font-family: 'Segoe UI', sans-serif; }
+
+.win-quote { font-size: 0.85rem; color: #4a6a90; font-style: italic; margin-bottom: 22px; }
+.play-again {
+  background: #C8102E; border: none; border-radius: 14px;
+  color: #fff; font-size: 1rem; font-weight: 700;
+  padding: 14px 32px; cursor: pointer;
+  transition: background 0.15s; font-family: 'Segoe UI', sans-serif;
+}
+.play-again:hover { background: #a50e26; }
+
+/* ── Weather canvas ── */
+#weather-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+/* ── Floating umbrella ── */
+.umbrella-el {
+  position: fixed; bottom: 56px; right: 44px; font-size: 3.6rem;
+  z-index: 20; transition: opacity 0.4s, transform 0.5s;
+  opacity: 0; transform: translateY(24px); pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+.umbrella-el.show { opacity: 1; transform: translateY(0); }
+
+/* ── Union Jack row ── */
+.uk-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.union-jack { width: 64px; height: 38px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); flex-shrink: 0; }
+.uk-umbrella-deco { font-size: 1.6rem; opacity: 0.7; }
+
+/* ── UK stripe at top of card ── */
+.uk-stripe {
+  height: 6px; border-radius: 6px;
+  background: linear-gradient(90deg,
+    #012169 0 20%, #C8102E 20% 22%, #012169 22% 39%,
+    #ffffff 39% 41%, #012169 41% 59%,
+    #ffffff 59% 61%, #012169 61% 78%,
+    #C8102E 78% 80%, #012169 80% 100%);
+  margin-bottom: 22px;
+  box-shadow: 0 1px 6px rgba(200,16,46,0.25);
+}
+</style>
+</head>
+<body>
+
+<div class="bear-header">
+  <!-- Paddington-esque bear face SVG -->
+  <svg class="bear-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Red hat -->
+    <rect x="18" y="10" width="64" height="10" rx="3" fill="#c0392b"/>
+    <rect x="26" y="6"  width="48" height="14" rx="4" fill="#c0392b"/>
+    <rect x="30" y="4"  width="40" height="6"  rx="2" fill="#a52020"/>
+    <!-- Hat brim shadow -->
+    <rect x="18" y="18" width="64" height="3" rx="1" fill="#8b1a1a" opacity="0.5"/>
+    <!-- Bear head -->
+    <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+    <!-- Ears -->
+    <circle cx="22" cy="36" r="10" fill="#8b5e2c"/>
+    <circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+    <circle cx="22" cy="36" r="6"  fill="#6b3e18"/>
+    <circle cx="78" cy="36" r="6"  fill="#6b3e18"/>
+    <!-- Face lighter area -->
+    <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+    <!-- Eyes -->
+    <circle cx="38" cy="52" r="5" fill="#1a0a00"/>
+    <circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+    <circle cx="39.5" cy="50.5" r="1.5" fill="white"/>
+    <circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+    <!-- Nose -->
+    <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+    <!-- Smile -->
+    <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- Blue coat collar hint -->
+    <path d="M20 84 Q50 96 80 84" fill="#1a3a6a"/>
+  </svg>
+  <!-- Paddington Station roundel -->
+  <div class="roundel-wrap">
+    <div class="roundel">
+      <div class="roundel-ring"></div>
+      <div class="roundel-bar"><span class="roundel-text">PADDINGTON</span></div>
+    </div>
+  </div>
+
+  <div class="uk-row">
+    <!-- Union Jack SVG -->
+    <svg class="union-jack" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="60" height="36" fill="#012169"/>
+      <line x1="0" y1="0" x2="60" y2="36" stroke="white" stroke-width="7.2"/>
+      <line x1="60" y1="0" x2="0" y2="36" stroke="white" stroke-width="7.2"/>
+      <line x1="0" y1="0" x2="60" y2="36" stroke="#C8102E" stroke-width="4.8"/>
+      <line x1="60" y1="0" x2="0" y2="36" stroke="#C8102E" stroke-width="4.8"/>
+      <rect x="24" y="0" width="12" height="36" fill="white"/>
+      <rect x="0" y="12" width="60" height="12" fill="white"/>
+      <rect x="26.4" y="0" width="7.2" height="36" fill="#C8102E"/>
+      <rect x="0" y="14.4" width="60" height="7.2" fill="#C8102E"/>
+    </svg>
+    <h1>Paddington's Maths Adventure</h1>
+    <span class="uk-umbrella-deco">☂️</span>
+  </div>
+  <p class="subtitle">Please look after these sums &nbsp;·&nbsp; 2s · 3s · 4s · 6s · 7s · 8s &nbsp;×&nbsp; 2–10</p>
+</div>
+
+<div class="card">
+  <div class="uk-stripe"></div>
+  <div class="scoreboard">
+    <div>Correct: <span class="score-correct" id="score-correct">0</span></div>
+    <div>Streak: <span class="score-streak" id="score-streak">0</span> 🐻</div>
+    <div>Total: <span id="score-total">0</span></div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-bar" id="accuracy-bar" style="width:0%"></div></div>
+
+  <div class="mastered-label">
+    <span>Marmalade jars collected 🍯</span>
+    <span id="mastered-count">0 / 0</span>
+  </div>
+  <div class="mastered-wrap"><div class="mastered-bar" id="mastered-bar" style="width:0%"></div></div>
+
+  <div class="weak-spots" id="weak-spots">
+    <span class="weak-label">Needs a hard stare:</span>
+    <span class="no-weak">answer some questions to find out!</span>
+  </div>
+
+  <div class="question" id="question">—</div>
+  <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next question →</button>
+</div>
+
+<canvas id="weather-canvas"></canvas>
+<div class="umbrella-el" id="umbrella">☂️</div>
+<canvas id="fireworks-canvas"></canvas>
+<div id="win-overlay">
+  <div class="win-card">
+    <!-- Paddington with red hat SVG -->
+    <svg class="win-bear-svg" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+      <!-- Red hat brim -->
+      <rect x="18" y="28" width="84" height="10" rx="4" fill="#C8102E"/>
+      <!-- Hat body -->
+      <rect x="30" y="8" width="60" height="24" rx="5" fill="#C8102E"/>
+      <!-- Hat top sheen -->
+      <rect x="34" y="10" width="52" height="6" rx="3" fill="#a50e26" opacity="0.5"/>
+      <!-- Hat band (gold) -->
+      <rect x="30" y="26" width="60" height="6" rx="2" fill="#f0c040"/>
+      <!-- Bear head -->
+      <ellipse cx="60" cy="78" rx="34" ry="32" fill="#8b5e2c"/>
+      <!-- Ears -->
+      <circle cx="28" cy="54" r="12" fill="#8b5e2c"/>
+      <circle cx="92" cy="54" r="12" fill="#8b5e2c"/>
+      <circle cx="28" cy="54" r="7" fill="#6b3e18"/>
+      <circle cx="92" cy="54" r="7" fill="#6b3e18"/>
+      <!-- Face patch -->
+      <ellipse cx="60" cy="87" rx="21" ry="17" fill="#c8904a"/>
+      <!-- Eyes -->
+      <circle cx="46" cy="70" r="6" fill="#1a0a00"/>
+      <circle cx="74" cy="70" r="6" fill="#1a0a00"/>
+      <circle cx="47.5" cy="68.5" r="2" fill="white"/>
+      <circle cx="75.5" cy="68.5" r="2" fill="white"/>
+      <!-- Nose -->
+      <ellipse cx="60" cy="82" rx="6" ry="4" fill="#2c1000"/>
+      <!-- Happy smile -->
+      <path d="M50 92 Q60 102 70 92" stroke="#2c1000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Blue duffle coat -->
+      <path d="M26 110 Q60 124 94 110 L94 128 Q60 136 26 128 Z" fill="#012169"/>
+      <!-- Coat buttons (gold) -->
+      <circle cx="60" cy="116" r="3" fill="#f0c040"/>
+      <circle cx="60" cy="124" r="3" fill="#f0c040"/>
+      <!-- Coat toggles -->
+      <rect x="48" y="115" width="8" height="3" rx="1.5" fill="#8b6010" opacity="0.8"/>
+      <rect x="64" y="115" width="8" height="3" rx="1.5" fill="#8b6010" opacity="0.8"/>
+    </svg>
+
+    <h2>Well done, dear!</h2>
+    <p class="win-intro">Paddington tipped his hat.<br>You've collected every marmalade jar<br>and answered <em id="win-streak-inline">—</em> questions in a row!</p>
+    <div class="win-stat" id="win-streak">—</div>
+    <div class="win-sub">correct in a row 🍊</div>
+
+    <!-- Prize: Windsorman Deluxe umbrella -->
+    <div class="win-prize">
+      <span class="prize-umbrella">☂️</span>
+      <div class="prize-text">
+        <div class="prize-label">🏆 Prize Awarded</div>
+        <div class="prize-name">The Windsorman Deluxe</div>
+        <div class="prize-sub">Hand-crafted in Mayfair &middot; Navy &amp; Gold &middot; Never loses its shape in a London shower</div>
+      </div>
+    </div>
+
+    <p class="win-quote">"A bear always tries his best."</p>
+    <button class="play-again" onclick="resetGame()">Play again!</button>
+  </div>
+</div>
+
+<script>
+const FACTORS_A = [2,3,4,6,7,8];
+const FACTORS_B = [2,3,4,5,6,7,8,9,10];
+
+const W_INIT      = 1.0;
+const W_WRONG     = 3.0;
+const W_WRONG_REL = 0.8;
+const W_SLOW      = 1.2;
+const W_RIGHT_DEC = 0.55;
+const W_MIN       = 0.2;
+const W_MAX       = 12.0;
+const SLOW_MS     = 6000;
+const TIMER_MS    = 10000;
+const WIN_STREAK  = 20;
+
+function canonKey(a,b) { return `${Math.min(a,b)},${Math.max(a,b)}`; }
+
+const allCanon = new Set();
+for (const a of FACTORS_A) for (const b of FACTORS_B) allCanon.add(canonKey(a,b));
+const TOTAL_CANON = allCanon.size;
+
+let weights = {}, attempts = {}, masteredPairs = new Set();
+let correct = 0, total = 0, streak = 0;
+let currentA, currentB, currentAnswer, answered, questionStartTime;
+
+function initWeights() {
+  for (const a of FACTORS_A) for (const b of FACTORS_B) {
+    weights[`${a},${b}`] = W_INIT;
+    attempts[`${a},${b}`] = 0;
+  }
+}
+
+function clamp(v,lo,hi) { return Math.max(lo,Math.min(hi,v)); }
+function randInt(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function shuffle(arr) {
+  for (let i=arr.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function isSuppressed(a,b) { return masteredPairs.has(canonKey(a,b)); }
+
+function pickProblem() {
+  const keys = Object.keys(weights).filter(k => {
+    const [a,b]=k.split(',').map(Number); return !isSuppressed(a,b);
+  });
+  const pool = keys.length ? keys : Object.keys(weights);
+  const sum = pool.reduce((s,k)=>s+weights[k],0);
+  let r = Math.random()*sum;
+  for (const k of pool) { r-=weights[k]; if (r<=0){const[a,b]=k.split(',').map(Number);return{a,b};} }
+  const [a,b]=pool[pool.length-1].split(',').map(Number); return{a,b};
+}
+
+function updateWeight(key,elapsed,isCorrect) {
+  const [a,b]=key.split(',').map(Number);
+  if (!isCorrect) {
+    weights[key]=clamp(weights[key]+W_WRONG,W_MIN,W_MAX);
+    for (const k of Object.keys(weights)) {
+      if (k===key) continue;
+      const [ka,kb]=k.split(',').map(Number);
+      if (ka===a||ka===b||kb===a||kb===b)
+        weights[k]=clamp(weights[k]+W_WRONG_REL,W_MIN,W_MAX);
+    }
+  } else if (elapsed>SLOW_MS) {
+    weights[key]=clamp(weights[key]+W_SLOW,W_MIN,W_MAX);
+  } else {
+    weights[key]=clamp(weights[key]*W_RIGHT_DEC,W_MIN,W_MAX);
+    masteredPairs.add(canonKey(a,b));
+  }
+}
+
+function checkWin() {
+  if (streak>=WIN_STREAK && masteredPairs.size>=TOTAL_CANON) { setTimeout(showWin,400); return true; }
+  return false;
+}
+
+function renderWeakSpots() {
+  const c=document.getElementById('weak-spots');
+  const seen=Object.entries(weights).filter(([k])=>attempts[k]>0).sort((a,b)=>b[1]-a[1]);
+  const weak=seen.filter(([,w])=>w>=2.0).slice(0,6);
+  if (!weak.length) {
+    const msg=seen.length===0?'answer some questions to find out!':'good show — keep going!';
+    c.innerHTML=`<span class="weak-label">Needs a hard stare:</span><span class="no-weak">${msg}</span>`;
+    return;
+  }
+  let html='<span class="weak-label">Needs a hard stare:</span>';
+  for (const [k] of weak){const[a,b]=k.split(',');html+=`<span class="weak-tag">${a}×${b}</span>`;}
+  c.innerHTML=html;
+}
+
+function renderMastered() {
+  const pct=TOTAL_CANON>0?(masteredPairs.size/TOTAL_CANON)*100:0;
+  document.getElementById('mastered-bar').style.width=pct+'%';
+  document.getElementById('mastered-count').textContent=`${masteredPairs.size} / ${TOTAL_CANON}`;
+}
+
+function startTimer() {
+  const bar=document.getElementById('timer-bar');
+  bar.style.transition='none'; bar.style.width='100%'; bar.style.background='#e8a020';
+  questionStartTime=Date.now();
+  setTimeout(()=>{ bar.style.transition=`width ${TIMER_MS}ms linear, background ${TIMER_MS*0.6}ms linear`; bar.style.width='0%'; bar.style.background='#c0392b'; },50);
+}
+
+function stopTimer() {
+  const bar=document.getElementById('timer-bar');
+  const elapsed=Date.now()-questionStartTime;
+  const pct=Math.max(0,100-(elapsed/TIMER_MS)*100);
+  bar.style.transition='none'; bar.style.width=pct+'%';
+}
+
+function generateDistractors(answer) {
+  const d=new Set();
+  const offsets=shuffle([-1,1,-2,2,-3,3,-4,4,-5,5,-6,6,-7,7,-8,8,-9,9,-10,10]);
+  for (const o of offsets){const v=answer+o;if(v>0&&v!==answer)d.add(v);if(d.size>=3)break;}
+  return [...d];
+}
+
+function nextQuestion() {
+  answered=false;
+  clearWeather();
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.add('hidden');
+  const {a,b}=pickProblem();
+  currentA=a; currentB=b; currentAnswer=a*b;
+  document.getElementById('question').textContent=`${a} × ${b} = ?`;
+  const choices=shuffle([currentAnswer,...generateDistractors(currentAnswer)]);
+  const container=document.getElementById('choices');
+  container.innerHTML='';
+  choices.forEach(val=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn'; btn.textContent=val;
+    btn.onclick=()=>handleAnswer(val,btn);
+    container.appendChild(btn);
+  });
+  startTimer();
+}
+
+function handleAnswer(chosen,btn) {
+  if (answered) return;
+  answered=true; stopTimer();
+  const elapsed=Date.now()-questionStartTime;
+  const key=`${currentA},${currentB}`;
+  attempts[key]++;
+  const allBtns=document.querySelectorAll('.choice-btn');
+  allBtns.forEach(b=>b.disabled=true);
+  const isCorrect=chosen===currentAnswer;
+  if (isCorrect){
+    btn.classList.add('correct');correct++;streak++;
+    setWeather('sun');
+  } else {
+    btn.classList.add('wrong'); streak=0;
+    allBtns.forEach(b=>{if(parseInt(b.textContent)===currentAnswer)b.classList.add('reveal');});
+    setWeather('rain');
+  }
+  total++; updateWeight(key,elapsed,isCorrect); renderWeakSpots(); renderMastered();
+  document.getElementById('score-correct').textContent=correct;
+  document.getElementById('score-streak').textContent=streak;
+  document.getElementById('score-total').textContent=total;
+  document.getElementById('accuracy-bar').style.width=Math.round((correct/total)*100)+'%';
+  showFeedback(isCorrect,elapsed);
+  if (!checkWin()) document.getElementById('next-btn').classList.remove('hidden');
+}
+
+const correctMsgs = [
+  "Quite right! Paddington would be pleased. 🐻",
+  "Splendid! Have a marmalade sandwich! 🍊",
+  "Very good indeed! ✓",
+  "That's the ticket! Keep it up! 🎩",
+  "Excellent work, dear! 💛",
+  "Bravo! Even Aunt Lucy would be impressed!",
+];
+const slowMsgs = [
+  "Correct, but Paddington had to wait… keep going!",
+  "Right answer — but a bit slow, like finding Peru on a map!",
+  "You got it, but try to be quicker next time! 🍯",
+];
+const wrongMsgs = [
+  (a,b,ans) => `Oh dear. ${a} × ${b} is ${ans}. Paddington gives you a hard stare. 😠`,
+  (a,b,ans) => `Not quite! ${a} × ${b} = ${ans}. You'll see this one again!`,
+  (a,b,ans) => `That's not right — it's ${ans}. Even a bear from Peru knows that! 🐻`,
+];
+
+function showFeedback(isCorrect,elapsed) {
+  const el=document.getElementById('feedback');
+  if (isCorrect) {
+    if (elapsed>SLOW_MS) {
+      el.textContent=slowMsgs[randInt(0,slowMsgs.length-1)];
+      el.className='feedback slow-msg';
+    } else {
+      el.textContent=correctMsgs[randInt(0,correctMsgs.length-1)];
+      el.className='feedback correct-msg';
+    }
+  } else {
+    el.textContent=wrongMsgs[randInt(0,wrongMsgs.length-1)](currentA,currentB,currentAnswer);
+    el.className='feedback wrong-msg';
+  }
+}
+
+// ── Fireworks (warm marmalade palette) ────────────────────────────────
+const canvas=document.getElementById('fireworks-canvas');
+const ctx=canvas.getContext('2d');
+let fireworksActive=false, particles=[], fwAnimId=null, burstInterval=null;
+const FW_COLORS=['#e8a020','#c0392b','#f5c842','#ff6b35','#fde8c8','#d4700a'];
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+window.addEventListener('resize',resizeCanvas); resizeCanvas();
+function launchBurst() {
+  const x=Math.random()*canvas.width, y=Math.random()*canvas.height*0.6;
+  const col=FW_COLORS[randInt(0,FW_COLORS.length-1)];
+  for (let i=0;i<80;i++) {
+    const angle=(Math.PI*2/80)*i, speed=2+Math.random()*5;
+    particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1,color:col,r:1.5+Math.random()*2});
+  }
+}
+function animateFireworks() {
+  if (!fireworksActive) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.07; p.alpha-=0.018;
+    ctx.globalAlpha=Math.max(0,p.alpha);
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color; ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  particles=particles.filter(p=>p.alpha>0);
+  fwAnimId=requestAnimationFrame(animateFireworks);
+}
+function startFireworks(){fireworksActive=true;particles=[];launchBurst();burstInterval=setInterval(launchBurst,700);animateFireworks();}
+function stopFireworks(){fireworksActive=false;clearInterval(burstInterval);cancelAnimationFrame(fwAnimId);ctx.clearRect(0,0,canvas.width,canvas.height);}
+
+function showWin() {
+  document.getElementById('win-streak').textContent=streak;
+  document.getElementById('win-streak-inline').textContent=streak;
+  document.getElementById('win-overlay').classList.add('show');
+  startFireworks();
+}
+
+function resetGame() {
+  stopFireworks();
+  document.getElementById('win-overlay').classList.remove('show');
+  correct=0;total=0;streak=0;
+  masteredPairs=new Set(); initWeights();
+  document.getElementById('score-correct').textContent='0';
+  document.getElementById('score-streak').textContent='0';
+  document.getElementById('score-total').textContent='0';
+  document.getElementById('accuracy-bar').style.width='0%';
+  clearWeather();
+  renderMastered(); renderWeakSpots(); nextQuestion();
+}
+
+document.addEventListener('keydown',e=>{
+  if ((e.key==='Enter'||e.key===' ')&&!document.getElementById('next-btn').classList.contains('hidden')) nextQuestion();
+});
+
+// ── Weather system ─────────────────────────────────────────────────────
+const wCanvas = document.getElementById('weather-canvas');
+const wCtx = wCanvas.getContext('2d');
+let weatherMode = 'clear'; // 'rain' | 'sun' | 'clear'
+let drops = [], sunParticles = [], weatherAnimId = null;
+const umbrella = document.getElementById('umbrella');
+
+function resizeWeather() { wCanvas.width=window.innerWidth; wCanvas.height=window.innerHeight; }
+window.addEventListener('resize', resizeWeather); resizeWeather();
+
+function spawnDrop() {
+  drops.push({
+    x: Math.random()*wCanvas.width,
+    y: -10,
+    len: 8+Math.random()*14,
+    speed: 6+Math.random()*8,
+    alpha: 0.18+Math.random()*0.22
+  });
+}
+
+function spawnSunParticle() {
+  const angle = Math.random()*Math.PI*2;
+  const r = 60+Math.random()*80;
+  const cx = wCanvas.width*0.5, cy = 80;
+  sunParticles.push({
+    x: cx+Math.cos(angle)*r, y: cy+Math.sin(angle)*r,
+    vx: Math.cos(angle)*0.6, vy: Math.sin(angle)*0.6,
+    alpha: 0.7+Math.random()*0.3,
+    r: 1.5+Math.random()*3,
+    decay: 0.006+Math.random()*0.006
+  });
+}
+
+function animateWeather() {
+  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
+
+  if (weatherMode === 'rain') {
+    if (drops.length < 120 && Math.random() < 0.7) spawnDrop();
+    wCtx.strokeStyle = '#7ab8e8';
+    wCtx.lineWidth = 1.2;
+    drops.forEach(d => {
+      wCtx.globalAlpha = d.alpha;
+      wCtx.beginPath();
+      wCtx.moveTo(d.x, d.y);
+      wCtx.lineTo(d.x - 2, d.y + d.len);
+      wCtx.stroke();
+      d.y += d.speed;
+      d.x -= 1.5;
+    });
+    wCtx.globalAlpha = 1;
+    drops = drops.filter(d => d.y < wCanvas.height + 20);
+  }
+
+  if (weatherMode === 'sun') {
+    // glowing sun circle
+    const cx = wCanvas.width*0.5, cy = 80;
+    const grad = wCtx.createRadialGradient(cx,cy,10,cx,cy,120);
+    grad.addColorStop(0,'rgba(255,220,60,0.35)');
+    grad.addColorStop(0.4,'rgba(255,180,30,0.12)');
+    grad.addColorStop(1,'rgba(255,160,0,0)');
+    wCtx.fillStyle = grad; wCtx.globalAlpha = 1;
+    wCtx.beginPath(); wCtx.arc(cx,cy,120,0,Math.PI*2); wCtx.fill();
+    wCtx.beginPath(); wCtx.arc(cx,cy,22,0,Math.PI*2);
+    wCtx.fillStyle='rgba(255,230,80,0.7)'; wCtx.fill();
+
+    if (sunParticles.length < 60 && Math.random() < 0.5) spawnSunParticle();
+    sunParticles.forEach(p => {
+      wCtx.globalAlpha=Math.max(0,p.alpha);
+      wCtx.beginPath(); wCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      wCtx.fillStyle='#ffe44a'; wCtx.fill();
+      p.x+=p.vx; p.y+=p.vy; p.alpha-=p.decay;
+    });
+    wCtx.globalAlpha=1;
+    sunParticles=sunParticles.filter(p=>p.alpha>0);
+  }
+
+  weatherAnimId = requestAnimationFrame(animateWeather);
+}
+
+function setWeather(mode) {
+  weatherMode = mode;
+  if (mode === 'rain') {
+    umbrella.classList.add('show');
+  } else {
+    umbrella.classList.remove('show');
+  }
+  if (!weatherAnimId) animateWeather();
+}
+
+function clearWeather() {
+  weatherMode = 'clear';
+  umbrella.classList.remove('show');
+  drops = []; sunParticles = [];
+  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
+}
+
+// ── end weather ────────────────────────────────────────────────────────
+
+initWeights(); renderMastered(); nextQuestion();
+</script>
+</body>
+</html>
