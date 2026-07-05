@@ -9,11 +9,10 @@
 body {
   font-family: 'Georgia', serif;
   color: #f0ead8;
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 20px;
-  /* British navy with a warm London fog tinge */
+  padding: 0;
   background-color: #07111f;
   background-image:
     radial-gradient(ellipse 80% 50% at 50% 0%, rgba(1,33,105,0.55) 0%, transparent 70%),
@@ -21,20 +20,60 @@ body {
     linear-gradient(175deg, #07111f 0%, #0c1c30 60%, #0d1a10 100%);
 }
 
-/* ── Paddington bear SVG hat decoration ── */
-.bear-header {
-  display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
+/* ── Start overlay (splash screen) ── */
+#start-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 28px 24px; overflow-y: auto;
+  background-color: #07111f;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(1,33,105,0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 20% 100%, rgba(200,16,46,0.12) 0%, transparent 60%),
+    linear-gradient(175deg, #07111f 0%, #0c1c30 60%, #0d1a10 100%);
+  transition: opacity 0.35s ease;
 }
-.bear-icon { width: 90px; height: 90px; margin-bottom: 8px; }
+#start-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.bear-header {
+  display: flex; flex-direction: column; align-items: center; margin-bottom: 16px;
+}
+.bear-icon { width: 80px; height: 80px; margin-bottom: 8px; }
+
+.start-info {
+  background: rgba(14,30,56,0.7); border: 1px solid #1a3a6a;
+  border-radius: 14px; padding: 14px 20px; margin-bottom: 20px;
+  max-width: 360px; width: 100%; text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+.start-info p { font-size: 0.82rem; color: #6a8ab0; line-height: 1.6; }
+.start-info strong { color: #f0c040; font-weight: 700; }
+
+.start-btn {
+  display: block; width: 100%; max-width: 300px;
+  padding: 18px; background: #C8102E; border: none; border-radius: 16px;
+  color: #fff; font-size: 1.2rem; font-weight: 800; cursor: pointer;
+  letter-spacing: 0.5px; font-family: 'Segoe UI', sans-serif;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 4px 24px rgba(200,16,46,0.45);
+}
+.start-btn:hover  { background: #a50e26; transform: translateY(-2px); }
+.start-btn:active { transform: translateY(0); }
+
+/* ── Game wrapper ── */
+#game-wrap {
+  display: none; width: 100%; max-width: 480px;
+  padding: 12px 16px 20px;
+}
+#game-wrap.visible { display: block; }
 
 h1 {
-  font-size: 1.7rem; font-weight: 700;
+  font-size: clamp(1.2rem, 4vw, 1.7rem); font-weight: 700;
   color: #f0c040;
   margin-bottom: 4px;
   text-shadow: 0 2px 12px rgba(200,130,10,0.5);
   letter-spacing: 0.5px;
 }
-.subtitle { font-size: 0.82rem; color: #6a7a90; margin-bottom: 28px; font-style: italic; }
+.subtitle { font-size: 0.78rem; color: #6a7a90; margin-bottom: 16px; font-style: italic; }
 
 /* ── Paddington Station roundel ── */
 .roundel-wrap { margin-bottom: 10px; }
@@ -62,8 +101,8 @@ h1 {
   background: #0e1e38;
   border: 2px solid #1a3a6a;
   border-radius: 20px;
-  padding: 36px 44px;
-  width: 100%; max-width: 480px;
+  padding: 20px 22px 24px;
+  width: 100%;
   box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,200,80,0.06);
   position: relative;
 }
@@ -77,25 +116,25 @@ h1 {
 
 .scoreboard {
   display: flex; justify-content: space-between;
-  margin-bottom: 20px; font-size: 0.83rem; color: #4a6a90;
+  margin-bottom: 14px; font-size: 0.8rem; color: #4a6a90;
   font-family: 'Segoe UI', sans-serif;
 }
 .scoreboard span { font-weight: 700; }
 .score-correct { color: #4ade80; }
 .score-streak  { color: #f0c040; }
 
-.progress-wrap { background: #06101e; border-radius: 8px; height: 6px; margin-bottom: 18px; overflow: hidden; }
+.progress-wrap { background: #06101e; border-radius: 8px; height: 6px; margin-bottom: 12px; overflow: hidden; }
 .progress-bar  { height: 100%; background: linear-gradient(90deg,#8b1a1a,#C8102E); border-radius: 8px; transition: width 0.4s; }
 
-.mastered-label { font-size: 0.73rem; color: #3a5070; margin-bottom: 6px; display: flex; justify-content: space-between; font-family: 'Segoe UI', sans-serif; }
-.mastered-wrap { background: #06101e; border-radius: 8px; height: 6px; margin-bottom: 20px; overflow: hidden; }
+.mastered-label { font-size: 0.70rem; color: #3a5070; margin-bottom: 5px; display: flex; justify-content: space-between; font-family: 'Segoe UI', sans-serif; }
+.mastered-wrap { background: #06101e; border-radius: 8px; height: 6px; margin-bottom: 14px; overflow: hidden; }
 .mastered-bar  { height: 100%; background: linear-gradient(90deg,#a0600a,#f0c040); border-radius: 8px; transition: width 0.4s; }
 
 .weak-spots {
   background: #06101e; border: 1px solid #1a2e4a;
-  border-radius: 10px; padding: 10px 14px;
-  margin-bottom: 22px; min-height: 38px;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-radius: 10px; padding: 8px 12px;
+  margin-bottom: 14px; min-height: 34px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   font-family: 'Segoe UI', sans-serif;
 }
 .weak-label { font-size: 0.70rem; color: #3a5070; white-space: nowrap; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -103,26 +142,27 @@ h1 {
 .no-weak  { font-size: 0.76rem; color: #3a5040; font-style: italic; }
 
 .question {
-  text-align: center; font-size: 3.4rem; font-weight: 800;
-  color: #e8f0ff; margin-bottom: 10px; letter-spacing: -1px;
-  min-height: 72px; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: clamp(2.4rem, 10vw, 3.4rem); font-weight: 800;
+  color: #e8f0ff; margin-bottom: 8px; letter-spacing: -1px;
+  min-height: 64px; display: flex; align-items: center; justify-content: center;
   text-shadow: 0 2px 12px rgba(200,16,46,0.15);
   font-family: 'Segoe UI', sans-serif;
 }
 
-.timer-wrap { background: #06101e; border-radius: 8px; height: 4px; margin-bottom: 26px; overflow: hidden; }
+.timer-wrap { background: #06101e; border-radius: 8px; height: 4px; margin-bottom: 14px; overflow: hidden; }
 .timer-bar  { height: 100%; background: #f0c040; border-radius: 8px; width: 100%; }
 
-.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .choice-btn {
   background: #0a1a30;
   border: 2px solid #1a3a6a;
   border-radius: 14px;
   color: #c8dcf8;
-  font-size: 1.6rem; font-weight: 700;
-  padding: 22px 10px; cursor: pointer;
+  font-size: clamp(1.3rem, 5vw, 1.6rem); font-weight: 700;
+  padding: 18px 8px; cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   outline: none; font-family: 'Segoe UI', sans-serif;
+  min-height: 70px;
 }
 .choice-btn:hover:not(:disabled) { background: #122040; border-color: #f0c040; transform: translateY(-2px); }
 .choice-btn:active:not(:disabled){ transform: translateY(0); }
@@ -132,8 +172,8 @@ h1 {
 .choice-btn:disabled { cursor: default; }
 
 .feedback {
-  text-align: center; margin-top: 22px;
-  font-size: 0.95rem; font-weight: 600; min-height: 28px;
+  text-align: center; margin-top: 14px;
+  font-size: 0.88rem; font-weight: 600; min-height: 24px;
   font-family: 'Segoe UI', sans-serif; font-style: italic;
 }
 .feedback.correct-msg { color: #4ade80; }
@@ -141,7 +181,7 @@ h1 {
 .feedback.slow-msg    { color: #f0c040; }
 
 .next-btn {
-  display: block; width: 100%; margin-top: 18px; padding: 15px;
+  display: block; width: 100%; margin-top: 12px; padding: 14px;
   background: #C8102E; border: none; border-radius: 14px;
   color: #fff; font-size: 1rem; font-weight: 700;
   cursor: pointer; letter-spacing: 0.5px;
@@ -220,96 +260,101 @@ h1 {
     #ffffff 39% 41%, #012169 41% 59%,
     #ffffff 59% 61%, #012169 61% 78%,
     #C8102E 78% 80%, #012169 80% 100%);
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   box-shadow: 0 1px 6px rgba(200,16,46,0.25);
 }
 </style>
 </head>
 <body>
 
-<div class="bear-header">
-  <!-- Paddington-esque bear face SVG -->
-  <svg class="bear-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <!-- Red hat -->
-    <rect x="18" y="10" width="64" height="10" rx="3" fill="#c0392b"/>
-    <rect x="26" y="6"  width="48" height="14" rx="4" fill="#c0392b"/>
-    <rect x="30" y="4"  width="40" height="6"  rx="2" fill="#a52020"/>
-    <!-- Hat brim shadow -->
-    <rect x="18" y="18" width="64" height="3" rx="1" fill="#8b1a1a" opacity="0.5"/>
-    <!-- Bear head -->
-    <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
-    <!-- Ears -->
-    <circle cx="22" cy="36" r="10" fill="#8b5e2c"/>
-    <circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
-    <circle cx="22" cy="36" r="6"  fill="#6b3e18"/>
-    <circle cx="78" cy="36" r="6"  fill="#6b3e18"/>
-    <!-- Face lighter area -->
-    <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
-    <!-- Eyes -->
-    <circle cx="38" cy="52" r="5" fill="#1a0a00"/>
-    <circle cx="62" cy="52" r="5" fill="#1a0a00"/>
-    <circle cx="39.5" cy="50.5" r="1.5" fill="white"/>
-    <circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
-    <!-- Nose -->
-    <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
-    <!-- Smile -->
-    <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <!-- Blue coat collar hint -->
-    <path d="M20 84 Q50 96 80 84" fill="#1a3a6a"/>
-  </svg>
-  <!-- Paddington Station roundel -->
-  <div class="roundel-wrap">
-    <div class="roundel">
-      <div class="roundel-ring"></div>
-      <div class="roundel-bar"><span class="roundel-text">PADDINGTON</span></div>
+<!-- ── Start / splash screen ── -->
+<div id="start-overlay">
+  <div class="bear-header">
+    <svg class="bear-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="18" y="10" width="64" height="10" rx="3" fill="#C8102E"/>
+      <rect x="26" y="6"  width="48" height="14" rx="4" fill="#C8102E"/>
+      <rect x="30" y="4"  width="40" height="6"  rx="2" fill="#a50e26"/>
+      <rect x="18" y="18" width="64" height="3" rx="1" fill="#8b1a1a" opacity="0.5"/>
+      <rect x="26" y="17" width="48" height="4" rx="1" fill="#f0c040" opacity="0.9"/>
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6"  fill="#6b3e18"/>
+      <circle cx="78" cy="36" r="6"  fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/>
+      <circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M20 84 Q50 96 80 84" fill="#012169"/>
+    </svg>
+
+    <div class="roundel-wrap">
+      <div class="roundel">
+        <div class="roundel-ring"></div>
+        <div class="roundel-bar"><span class="roundel-text">PADDINGTON</span></div>
+      </div>
     </div>
+
+    <div class="uk-row">
+      <svg class="union-jack" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg">
+        <rect width="60" height="36" fill="#012169"/>
+        <line x1="0" y1="0" x2="60" y2="36" stroke="white" stroke-width="7.2"/>
+        <line x1="60" y1="0" x2="0" y2="36" stroke="white" stroke-width="7.2"/>
+        <line x1="0" y1="0" x2="60" y2="36" stroke="#C8102E" stroke-width="4.8"/>
+        <line x1="60" y1="0" x2="0" y2="36" stroke="#C8102E" stroke-width="4.8"/>
+        <rect x="24" y="0" width="12" height="36" fill="white"/>
+        <rect x="0" y="12" width="60" height="12" fill="white"/>
+        <rect x="26.4" y="0" width="7.2" height="36" fill="#C8102E"/>
+        <rect x="0" y="14.4" width="60" height="7.2" fill="#C8102E"/>
+      </svg>
+      <h1>Paddington's Maths Adventure</h1>
+      <span class="uk-umbrella-deco">☂️</span>
+    </div>
+    <p class="subtitle">Please look after these sums &nbsp;·&nbsp; 2s · 3s · 4s · 6s · 7s · 8s &nbsp;×&nbsp; 2–10</p>
   </div>
 
-  <div class="uk-row">
-    <!-- Union Jack SVG -->
-    <svg class="union-jack" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="60" height="36" fill="#012169"/>
-      <line x1="0" y1="0" x2="60" y2="36" stroke="white" stroke-width="7.2"/>
-      <line x1="60" y1="0" x2="0" y2="36" stroke="white" stroke-width="7.2"/>
-      <line x1="0" y1="0" x2="60" y2="36" stroke="#C8102E" stroke-width="4.8"/>
-      <line x1="60" y1="0" x2="0" y2="36" stroke="#C8102E" stroke-width="4.8"/>
-      <rect x="24" y="0" width="12" height="36" fill="white"/>
-      <rect x="0" y="12" width="60" height="12" fill="white"/>
-      <rect x="26.4" y="0" width="7.2" height="36" fill="#C8102E"/>
-      <rect x="0" y="14.4" width="60" height="7.2" fill="#C8102E"/>
-    </svg>
-    <h1>Paddington's Maths Adventure</h1>
-    <span class="uk-umbrella-deco">☂️</span>
+  <div class="start-info">
+    <p>Pick the <strong>correct answer</strong> before the timer runs out.<br>
+    Answer quickly to earn marmalade jars 🍯<br>
+    Master every sum and go on a <strong>20-question streak</strong> to win<br>
+    the <strong>Windsorman Deluxe</strong> ☂️</p>
   </div>
-  <p class="subtitle">Please look after these sums &nbsp;·&nbsp; 2s · 3s · 4s · 6s · 7s · 8s &nbsp;×&nbsp; 2–10</p>
+
+  <button class="start-btn" onclick="startGame()">Let's Go! 🐻</button>
 </div>
 
-<div class="card">
-  <div class="uk-stripe"></div>
-  <div class="scoreboard">
-    <div>Correct: <span class="score-correct" id="score-correct">0</span></div>
-    <div>Streak: <span class="score-streak" id="score-streak">0</span> 🐻</div>
-    <div>Total: <span id="score-total">0</span></div>
+<!-- ── Game (hidden until Start pressed) ── -->
+<div id="game-wrap">
+  <div class="card">
+    <div class="uk-stripe"></div>
+    <div class="scoreboard">
+      <div>Correct: <span class="score-correct" id="score-correct">0</span></div>
+      <div>Streak: <span class="score-streak" id="score-streak">0</span> 🐻</div>
+      <div>Total: <span id="score-total">0</span></div>
+    </div>
+
+    <div class="progress-wrap"><div class="progress-bar" id="accuracy-bar" style="width:0%"></div></div>
+
+    <div class="mastered-label">
+      <span>Marmalade jars 🍯</span>
+      <span id="mastered-count">0 / 0</span>
+    </div>
+    <div class="mastered-wrap"><div class="mastered-bar" id="mastered-bar" style="width:0%"></div></div>
+
+    <div class="weak-spots" id="weak-spots">
+      <span class="weak-label">Needs a hard stare:</span>
+      <span class="no-weak">answer some questions to find out!</span>
+    </div>
+
+    <div class="question" id="question">—</div>
+    <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next question →</button>
   </div>
-
-  <div class="progress-wrap"><div class="progress-bar" id="accuracy-bar" style="width:0%"></div></div>
-
-  <div class="mastered-label">
-    <span>Marmalade jars collected 🍯</span>
-    <span id="mastered-count">0 / 0</span>
-  </div>
-  <div class="mastered-wrap"><div class="mastered-bar" id="mastered-bar" style="width:0%"></div></div>
-
-  <div class="weak-spots" id="weak-spots">
-    <span class="weak-label">Needs a hard stare:</span>
-    <span class="no-weak">answer some questions to find out!</span>
-  </div>
-
-  <div class="question" id="question">—</div>
-  <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
-  <div class="choices" id="choices"></div>
-  <div class="feedback" id="feedback"></div>
-  <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next question →</button>
 </div>
 
 <canvas id="weather-canvas"></canvas>
@@ -614,6 +659,14 @@ function showWin() {
   startFireworks();
 }
 
+function startGame() {
+  const overlay = document.getElementById('start-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => { overlay.style.display = 'none'; }, 360);
+  document.getElementById('game-wrap').classList.add('visible');
+  nextQuestion();
+}
+
 function resetGame() {
   stopFireworks();
   document.getElementById('win-overlay').classList.remove('show');
@@ -624,7 +677,12 @@ function resetGame() {
   document.getElementById('score-total').textContent='0';
   document.getElementById('accuracy-bar').style.width='0%';
   clearWeather();
-  renderMastered(); renderWeakSpots(); nextQuestion();
+  renderMastered(); renderWeakSpots();
+  // Go back to the splash screen
+  const overlay = document.getElementById('start-overlay');
+  overlay.style.display = 'flex';
+  overlay.classList.remove('hidden');
+  document.getElementById('game-wrap').classList.remove('visible');
 }
 
 document.addEventListener('keydown',e=>{
@@ -729,7 +787,7 @@ function clearWeather() {
 
 // ── end weather ────────────────────────────────────────────────────────
 
-initWeights(); renderMastered(); nextQuestion();
+initWeights(); renderMastered();
 </script>
 </body>
 </html>
