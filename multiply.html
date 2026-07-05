@@ -1,468 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multiplication Practice</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiplication Practice</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1a2e; color: #eee;
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 20px;
+}
+h1 { font-size: 1.6rem; font-weight: 700; color: #a78bfa; margin-bottom: 6px; }
+.subtitle { font-size: 0.85rem; color: #666; margin-bottom: 28px; }
+.card {
+  background: #16213e; border: 1px solid #2a2a5a; border-radius: 20px;
+  padding: 40px 48px; width: 100%; max-width: 480px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.scoreboard { display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 0.85rem; color: #888; }
+.scoreboard span { font-weight: 600; }
+.score-correct { color: #34d399; }
+.score-streak { color: #fbbf24; }
+.progress-wrap { background: #0f172a; border-radius: 8px; height: 6px; margin-bottom: 20px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg,#7c3aed,#a78bfa); border-radius: 8px; transition: width 0.4s; }
+.mastered-wrap { background: #0f172a; border-radius: 8px; height: 6px; margin-bottom: 20px; overflow: hidden; }
+.mastered-bar { height: 100%; background: linear-gradient(90deg,#059669,#34d399); border-radius: 8px; transition: width 0.4s; }
+.mastered-label { font-size: 0.75rem; color: #555; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.weak-spots {
+  background: #0f172a; border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 24px; min-height: 38px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.weak-label { font-size: 0.72rem; color: #555; white-space: nowrap; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.weak-tag { background: #3b1a1a; border: 1px solid #7f1d1d; border-radius: 6px; padding: 2px 8px; font-size: 0.78rem; color: #fca5a5; font-weight: 600; }
+.no-weak { font-size: 0.78rem; color: #3d5a40; font-style: italic; }
+.question {
+  text-align: center; font-size: 3.5rem; font-weight: 800; color: #e2e8f0;
+  margin-bottom: 10px; letter-spacing: -1px; min-height: 72px;
+  display: flex; align-items: center; justify-content: center;
+}
+.timer-wrap { background: #0f172a; border-radius: 8px; height: 4px; margin-bottom: 28px; overflow: hidden; }
+.timer-bar { height: 100%; background: #34d399; border-radius: 8px; width: 100%; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.choice-btn {
+  background: #0f3460; border: 2px solid #1e4a8a; border-radius: 14px;
+  color: #e2e8f0; font-size: 1.6rem; font-weight: 700; padding: 22px 10px;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s; outline: none;
+}
+.choice-btn:hover:not(:disabled) { background: #1a4a7a; border-color: #a78bfa; transform: translateY(-2px); }
+.choice-btn:active:not(:disabled) { transform: translateY(0); }
+.choice-btn.correct { background: #064e3b; border-color: #34d399; color: #34d399; }
+.choice-btn.wrong   { background: #450a0a; border-color: #f87171; color: #f87171; }
+.choice-btn.reveal  { background: #064e3b; border-color: #34d399; color: #34d399; }
+.choice-btn:disabled { cursor: default; }
+.feedback { text-align: center; margin-top: 24px; font-size: 1rem; font-weight: 600; min-height: 28px; }
+.feedback.correct-msg { color: #34d399; }
+.feedback.wrong-msg   { color: #f87171; }
+.feedback.slow-msg    { color: #fbbf24; }
+.next-btn {
+  display: block; width: 100%; margin-top: 18px; padding: 16px;
+  background: #7c3aed; border: none; border-radius: 14px; color: #fff;
+  font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
+  transition: background 0.15s, transform 0.1s;
+}
+.next-btn:hover { background: #6d28d9; transform: translateY(-1px); }
+.next-btn:active { transform: translateY(0); }
+.next-btn.hidden { visibility: hidden; }
 
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #a78bfa;
-      margin-bottom: 6px;
-      letter-spacing: 0.5px;
-    }
-
-    .subtitle {
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 28px;
-    }
-
-    .card {
-      background: #16213e;
-      border: 1px solid #2a2a5a;
-      border-radius: 20px;
-      padding: 40px 48px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
-
-    .scoreboard {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      font-size: 0.85rem;
-      color: #888;
-    }
-
-    .scoreboard span { font-weight: 600; }
-    .score-correct { color: #34d399; }
-    .score-streak { color: #fbbf24; }
-
-    .weak-spots {
-      background: #0f172a;
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-bottom: 24px;
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .weak-label {
-      font-size: 0.72rem;
-      color: #555;
-      white-space: nowrap;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .weak-tag {
-      background: #3b1a1a;
-      border: 1px solid #7f1d1d;
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 0.78rem;
-      color: #fca5a5;
-      font-weight: 600;
-    }
-
-    .no-weak {
-      font-size: 0.78rem;
-      color: #3d5a40;
-      font-style: italic;
-    }
-
-    .question {
-      text-align: center;
-      font-size: 3.5rem;
-      font-weight: 800;
-      color: #e2e8f0;
-      margin-bottom: 10px;
-      letter-spacing: -1px;
-      min-height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .timer-bar-wrap {
-      background: #0f172a;
-      border-radius: 8px;
-      height: 4px;
-      margin-bottom: 28px;
-      overflow: hidden;
-    }
-
-    .timer-bar {
-      height: 100%;
-      background: #34d399;
-      border-radius: 8px;
-      width: 100%;
-      transition: width 0.1s linear, background 0.5s;
-    }
-
-    .choices {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .choice-btn {
-      background: #0f3460;
-      border: 2px solid #1e4a8a;
-      border-radius: 14px;
-      color: #e2e8f0;
-      font-size: 1.6rem;
-      font-weight: 700;
-      padding: 22px 10px;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, transform 0.1s;
-      outline: none;
-    }
-
-    .choice-btn:hover:not(:disabled) {
-      background: #1a4a7a;
-      border-color: #a78bfa;
-      transform: translateY(-2px);
-    }
-
-    .choice-btn:active:not(:disabled) { transform: translateY(0); }
-    .choice-btn.correct { background: #064e3b; border-color: #34d399; color: #34d399; }
-    .choice-btn.wrong   { background: #450a0a; border-color: #f87171; color: #f87171; }
-    .choice-btn.reveal  { background: #064e3b; border-color: #34d399; color: #34d399; }
-    .choice-btn:disabled { cursor: default; }
-
-    .feedback {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 1rem;
-      font-weight: 600;
-      min-height: 28px;
-    }
-
-    .feedback.correct-msg { color: #34d399; }
-    .feedback.wrong-msg   { color: #f87171; }
-    .feedback.slow-msg    { color: #fbbf24; }
-
-    .next-btn {
-      display: block;
-      width: 100%;
-      margin-top: 18px;
-      padding: 16px;
-      background: #7c3aed;
-      border: none;
-      border-radius: 14px;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      transition: background 0.15s, transform 0.1s;
-    }
-
-    .next-btn:hover { background: #6d28d9; transform: translateY(-1px); }
-    .next-btn:active { transform: translateY(0); }
-    .next-btn.hidden { visibility: hidden; }
-
-    .accuracy-bar-wrap {
-      background: #0f172a;
-      border-radius: 8px;
-      height: 6px;
-      margin-bottom: 28px;
-      overflow: hidden;
-    }
-
-    .accuracy-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #7c3aed, #a78bfa);
-      border-radius: 8px;
-      transition: width 0.4s ease;
-    }
-  </style>
+/* Win overlay */
+#win-overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(10,10,30,0.92); flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+}
+#win-overlay.show { display: flex; }
+#fireworks-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+.win-card {
+  background: #16213e; border: 2px solid #a78bfa; border-radius: 24px;
+  padding: 48px 56px; text-align: center; z-index: 101; max-width: 420px;
+  box-shadow: 0 0 60px rgba(167,139,250,0.3);
+}
+.win-card h2 { font-size: 2.2rem; color: #a78bfa; margin-bottom: 12px; }
+.win-card p  { color: #94a3b8; font-size: 1rem; margin-bottom: 28px; line-height: 1.6; }
+.win-stat { font-size: 2.5rem; font-weight: 800; color: #34d399; }
+.play-again {
+  background: #7c3aed; border: none; border-radius: 14px; color: #fff;
+  font-size: 1rem; font-weight: 700; padding: 14px 32px; cursor: pointer;
+  transition: background 0.15s;
+}
+.play-again:hover { background: #6d28d9; }
+</style>
 </head>
 <body>
-  <h1>Times Table Practice</h1>
-  <p class="subtitle">2s · 3s · 4s · 6s · 7s · 8s &nbsp;×&nbsp; 1–10</p>
+<h1>Times Table Practice</h1>
+<p class="subtitle">2s · 3s · 4s · 6s · 7s · 8s &nbsp;×&nbsp; 2–10</p>
 
-  <div class="card">
-    <div class="scoreboard">
-      <div>Correct: <span class="score-correct" id="score-correct">0</span></div>
-      <div>Streak: <span class="score-streak" id="score-streak">0</span> 🔥</div>
-      <div>Total: <span id="score-total">0</span></div>
-    </div>
-
-    <div class="accuracy-bar-wrap">
-      <div class="accuracy-bar" id="accuracy-bar" style="width:0%"></div>
-    </div>
-
-    <!-- Weak spots derived from highest-weight problems -->
-    <div class="weak-spots" id="weak-spots">
-      <span class="weak-label">Needs work:</span>
-      <span class="no-weak">answer some questions to find out!</span>
-    </div>
-
-    <div class="question" id="question">—</div>
-
-    <div class="timer-bar-wrap">
-      <div class="timer-bar" id="timer-bar"></div>
-    </div>
-
-    <div class="choices" id="choices"></div>
-
-    <div class="feedback" id="feedback"></div>
-
-    <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next →</button>
+<div class="card">
+  <div class="scoreboard">
+    <div>Correct: <span class="score-correct" id="score-correct">0</span></div>
+    <div>Streak: <span class="score-streak" id="score-streak">0</span> 🔥</div>
+    <div>Total: <span id="score-total">0</span></div>
   </div>
 
-  <script>
-    const FACTORS_A = [2, 3, 4, 6, 7, 8];
-    const FACTORS_B = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  <div class="progress-wrap"><div class="progress-bar" id="accuracy-bar" style="width:0%"></div></div>
 
-    // Weight config
-    const W_INIT      = 1.0;   // starting weight
-    const W_WRONG     = 3.0;   // added on wrong answer
-    const W_SLOW      = 1.2;   // added on slow-but-correct (> SLOW_MS)
-    const W_RIGHT_DEC = 0.55;  // multiply weight by this on fast correct
-    const W_MIN       = 0.4;   // floor so nothing disappears entirely
-    const W_MAX       = 12.0;  // ceiling
-    const SLOW_MS     = 6000;  // threshold for "slow"
-    const TIMER_MS    = 10000; // visible countdown bar duration
+  <div class="mastered-label">
+    <span>Mastered</span>
+    <span id="mastered-count">0 / 0</span>
+  </div>
+  <div class="mastered-wrap"><div class="mastered-bar" id="mastered-bar" style="width:0%"></div></div>
 
-    // Build weight map keyed "a,b"
-    const weights = {};
-    const attempts = {}; // how many times each problem has been seen
-    for (const a of FACTORS_A)
-      for (const b of FACTORS_B) {
-        weights[`${a},${b}`] = W_INIT;
-        attempts[`${a},${b}`] = 0;
-      }
+  <div class="weak-spots" id="weak-spots">
+    <span class="weak-label">Needs work:</span>
+    <span class="no-weak">answer some questions to find out!</span>
+  </div>
 
-    let correct = 0, total = 0, streak = 0;
-    let currentA, currentB, currentAnswer;
-    let answered = false;
-    let questionStartTime = null;
-    let timerInterval = null;
+  <div class="question" id="question">—</div>
+  <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next →</button>
+</div>
 
-    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+<canvas id="fireworks-canvas"></canvas>
+<div id="win-overlay">
+  <div class="win-card">
+    <h2>🏆 You Did It!</h2>
+    <p>You mastered every multiplication problem<br>and finished with a streak of</p>
+    <div class="win-stat" id="win-streak">—</div>
+    <p style="margin-top:8px;margin-bottom:28px">correct in a row!</p>
+    <button class="play-again" onclick="resetGame()">Play Again</button>
+  </div>
+</div>
 
-    function randInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+<script>
+const FACTORS_A = [2,3,4,6,7,8];
+const FACTORS_B = [2,3,4,5,6,7,8,9,10];
 
-    function shuffle(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
+const W_INIT       = 1.0;
+const W_WRONG      = 3.0;
+const W_WRONG_REL  = 0.8;  // bump for same-factor problems on wrong
+const W_SLOW       = 1.2;
+const W_RIGHT_DEC  = 0.55;
+const W_MIN        = 0.2;
+const W_MAX        = 12.0;
+const SLOW_MS      = 6000;
+const TIMER_MS     = 10000;
+const WIN_STREAK   = 20;
 
-    // Weighted random pick of a problem
-    function pickProblem() {
-      const keys = Object.keys(weights);
-      const total = keys.reduce((s, k) => s + weights[k], 0);
-      let r = Math.random() * total;
-      for (const k of keys) {
-        r -= weights[k];
-        if (r <= 0) {
-          const [a, b] = k.split(',').map(Number);
-          return { a, b };
-        }
-      }
-      const last = keys[keys.length - 1].split(',').map(Number);
-      return { a: last[0], b: last[1] };
-    }
+// canonical key: smaller factor first
+function canonKey(a, b) { return `${Math.min(a,b)},${Math.max(a,b)}`; }
 
-    function updateWeight(key, elapsed, isCorrect) {
-      let w = weights[key];
-      if (!isCorrect) {
-        w += W_WRONG;
-      } else if (elapsed > SLOW_MS) {
-        w += W_SLOW;
-      } else {
-        w *= W_RIGHT_DEC;
-      }
-      weights[key] = clamp(w, W_MIN, W_MAX);
-    }
+// Build all canonical pairs reachable from the pool
+const allCanon = new Set();
+for (const a of FACTORS_A) for (const b of FACTORS_B) allCanon.add(canonKey(a,b));
+const TOTAL_CANON = allCanon.size;
 
-    function renderWeakSpots() {
-      const container = document.getElementById('weak-spots');
-      // Only show problems that have been attempted
-      const seen = Object.entries(weights)
-        .filter(([k]) => attempts[k] > 0)
-        .sort((a, b) => b[1] - a[1]);
+let weights = {}, attempts = {}, masteredPairs = new Set();
+let correct = 0, total = 0, streak = 0;
+let currentA, currentB, currentAnswer, answered, questionStartTime;
 
-      // Show top problems with weight above a threshold
-      const threshold = 2.0;
-      const weak = seen.filter(([, w]) => w >= threshold).slice(0, 6);
+function initWeights() {
+  for (const a of FACTORS_A) for (const b of FACTORS_B) {
+    weights[`${a},${b}`] = W_INIT;
+    attempts[`${a},${b}`] = 0;
+  }
+}
 
-      if (weak.length === 0) {
-        const noWeak = seen.length === 0
-          ? 'answer some questions to find out!'
-          : 'looking good — keep it up!';
-        container.innerHTML = `<span class="weak-label">Needs work:</span><span class="no-weak">${noWeak}</span>`;
-        return;
-      }
+function clamp(v,lo,hi) { return Math.max(lo,Math.min(hi,v)); }
+function randInt(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function shuffle(arr) {
+  for (let i=arr.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
 
-      let html = '<span class="weak-label">Needs work:</span>';
-      for (const [k] of weak) {
-        const [a, b] = k.split(',');
-        html += `<span class="weak-tag">${a}×${b}</span>`;
-      }
-      container.innerHTML = html;
-    }
+function isSuppressed(a, b) {
+  // suppress if the canonical pair is already mastered
+  return masteredPairs.has(canonKey(a, b));
+}
 
-    function startTimer() {
-      clearInterval(timerInterval);
-      const bar = document.getElementById('timer-bar');
-      bar.style.transition = 'none';
-      bar.style.width = '100%';
-      bar.style.background = '#34d399';
-      questionStartTime = Date.now();
+function pickProblem() {
+  const keys = Object.keys(weights).filter(k => {
+    const [a,b] = k.split(',').map(Number);
+    return !isSuppressed(a, b);
+  });
+  if (keys.length === 0) return pickAnyProblem(); // fallback
+  const sum = keys.reduce((s,k) => s+weights[k], 0);
+  let r = Math.random() * sum;
+  for (const k of keys) {
+    r -= weights[k];
+    if (r <= 0) { const [a,b]=k.split(',').map(Number); return {a,b}; }
+  }
+  const [a,b] = keys[keys.length-1].split(',').map(Number);
+  return {a,b};
+}
 
-      // Animate the bar shrinking
-      setTimeout(() => {
-        bar.style.transition = `width ${TIMER_MS}ms linear, background ${TIMER_MS * 0.6}ms linear`;
-        bar.style.width = '0%';
-        bar.style.background = '#f87171';
-      }, 50);
-    }
+function pickAnyProblem() {
+  const keys = Object.keys(weights);
+  const sum = keys.reduce((s,k) => s+weights[k], 0);
+  let r = Math.random() * sum;
+  for (const k of keys) {
+    r -= weights[k];
+    if (r <= 0) { const [a,b]=k.split(',').map(Number); return {a,b}; }
+  }
+  const [a,b] = keys[keys.length-1].split(',').map(Number);
+  return {a,b};
+}
 
-    function stopTimer() {
-      clearInterval(timerInterval);
-      const bar = document.getElementById('timer-bar');
-      // Freeze bar at current position
-      const elapsed = Date.now() - questionStartTime;
-      const pct = Math.max(0, 100 - (elapsed / TIMER_MS) * 100);
-      bar.style.transition = 'none';
-      bar.style.width = pct + '%';
-    }
+function updateWeight(key, elapsed, isCorrect) {
+  const [a, b] = key.split(',').map(Number);
 
-    function generateDistractors(answer) {
-      const distractors = new Set();
-      const offsets = shuffle([-1,1,-2,2,-3,3,-4,4,-5,5,-6,6,-7,7,-8,8,-9,9,-10,10]);
-      for (const d of offsets) {
-        const v = answer + d;
-        if (v > 0 && v !== answer) distractors.add(v);
-        if (distractors.size >= 3) break;
-      }
-      return [...distractors];
-    }
-
-    function nextQuestion() {
-      answered = false;
-      document.getElementById('feedback').textContent = '';
-      document.getElementById('feedback').className = 'feedback';
-      document.getElementById('next-btn').classList.add('hidden');
-
-      const { a, b } = pickProblem();
-      currentA = a;
-      currentB = b;
-      currentAnswer = a * b;
-
-      document.getElementById('question').textContent = `${a} × ${b} = ?`;
-
-      const choices = shuffle([currentAnswer, ...generateDistractors(currentAnswer)]);
-      const container = document.getElementById('choices');
-      container.innerHTML = '';
-
-      choices.forEach(val => {
-        const btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.textContent = val;
-        btn.onclick = () => handleAnswer(val, btn);
-        container.appendChild(btn);
-      });
-
-      startTimer();
-    }
-
-    function handleAnswer(chosen, btn) {
-      if (answered) return;
-      answered = true;
-
-      stopTimer();
-      const elapsed = Date.now() - questionStartTime;
-      const key = `${currentA},${currentB}`;
-      attempts[key]++;
-
-      const allBtns = document.querySelectorAll('.choice-btn');
-      allBtns.forEach(b => b.disabled = true);
-
-      const isCorrect = chosen === currentAnswer;
-
-      if (isCorrect) {
-        btn.classList.add('correct');
-        correct++;
-        streak++;
-      } else {
-        btn.classList.add('wrong');
-        streak = 0;
-        allBtns.forEach(b => {
-          if (parseInt(b.textContent) === currentAnswer) b.classList.add('reveal');
-        });
-      }
-
-      total++;
-      updateWeight(key, elapsed, isCorrect);
-      renderWeakSpots();
-
-      document.getElementById('score-correct').textContent = correct;
-      document.getElementById('score-streak').textContent = streak;
-      document.getElementById('score-total').textContent = total;
-
-      const pct = Math.round((correct / total) * 100);
-      document.getElementById('accuracy-bar').style.width = pct + '%';
-
-      showFeedback(isCorrect, elapsed);
-      document.getElementById('next-btn').classList.remove('hidden');
-    }
-
-    function showFeedback(isCorrect, elapsed) {
-      const el = document.getElementById('feedback');
-      if (isCorrect) {
-        if (elapsed > SLOW_MS) {
-          el.textContent = `Correct, but a bit slow — keep practicing ${currentA}×${currentB}!`;
-          el.className = 'feedback slow-msg';
-        } else {
-          const msgs = ['Correct! 🎉', 'Nice work! ✓', 'Nailed it! ⚡', 'Keep it up! 🌟', 'Perfect! 💯'];
-          el.textContent = msgs[randInt(0, msgs.length - 1)];
-          el.className = 'feedback correct-msg';
-        }
-      } else {
-        el.textContent = `${currentA} × ${currentB} = ${currentAnswer}. You'll see this one again!`;
-        el.className = 'feedback wrong-msg';
+  if (!isCorrect) {
+    weights[key] = clamp(weights[key] + W_WRONG, W_MIN, W_MAX);
+    // bump related problems sharing a factor
+    for (const k of Object.keys(weights)) {
+      if (k === key) continue;
+      const [ka, kb] = k.split(',').map(Number);
+      if (ka === a || ka === b || kb === a || kb === b) {
+        weights[k] = clamp(weights[k] + W_WRONG_REL, W_MIN, W_MAX);
       }
     }
+  } else if (elapsed > SLOW_MS) {
+    weights[key] = clamp(weights[key] + W_SLOW, W_MIN, W_MAX);
+  } else {
+    weights[key] = clamp(weights[key] * W_RIGHT_DEC, W_MIN, W_MAX);
+    // mark canonical pair as mastered
+    masteredPairs.add(canonKey(a, b));
+  }
+}
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        const nextBtn = document.getElementById('next-btn');
-        if (!nextBtn.classList.contains('hidden')) nextQuestion();
-      }
+function checkWin() {
+  if (streak >= WIN_STREAK && masteredPairs.size >= TOTAL_CANON) {
+    setTimeout(showWin, 400);
+    return true;
+  }
+  return false;
+}
+
+function renderWeakSpots() {
+  const container = document.getElementById('weak-spots');
+  const seen = Object.entries(weights)
+    .filter(([k]) => attempts[k] > 0)
+    .sort((a,b) => b[1]-a[1]);
+  const weak = seen.filter(([,w]) => w >= 2.0).slice(0,6);
+  if (!weak.length) {
+    const msg = seen.length===0 ? 'answer some questions to find out!' : 'looking good — keep it up!';
+    container.innerHTML = `<span class="weak-label">Needs work:</span><span class="no-weak">${msg}</span>`;
+    return;
+  }
+  let html = '<span class="weak-label">Needs work:</span>';
+  for (const [k] of weak) { const [a,b]=k.split(','); html+=`<span class="weak-tag">${a}×${b}</span>`; }
+  container.innerHTML = html;
+}
+
+function renderMastered() {
+  const pct = TOTAL_CANON > 0 ? (masteredPairs.size / TOTAL_CANON) * 100 : 0;
+  document.getElementById('mastered-bar').style.width = pct + '%';
+  document.getElementById('mastered-count').textContent = `${masteredPairs.size} / ${TOTAL_CANON}`;
+}
+
+function startTimer() {
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  bar.style.background = '#34d399';
+  questionStartTime = Date.now();
+  setTimeout(() => {
+    bar.style.transition = `width ${TIMER_MS}ms linear, background ${TIMER_MS*0.6}ms linear`;
+    bar.style.width = '0%';
+    bar.style.background = '#f87171';
+  }, 50);
+}
+
+function stopTimer() {
+  const bar = document.getElementById('timer-bar');
+  const elapsed = Date.now() - questionStartTime;
+  const pct = Math.max(0, 100-(elapsed/TIMER_MS)*100);
+  bar.style.transition = 'none';
+  bar.style.width = pct + '%';
+}
+
+function generateDistractors(answer) {
+  const d = new Set();
+  const offsets = shuffle([-1,1,-2,2,-3,3,-4,4,-5,5,-6,6,-7,7,-8,8,-9,9,-10,10]);
+  for (const o of offsets) {
+    const v = answer + o;
+    if (v > 0 && v !== answer) d.add(v);
+    if (d.size >= 3) break;
+  }
+  return [...d];
+}
+
+function nextQuestion() {
+  answered = false;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('next-btn').classList.add('hidden');
+
+  const {a,b} = pickProblem();
+  currentA=a; currentB=b; currentAnswer=a*b;
+  document.getElementById('question').textContent = `${a} × ${b} = ?`;
+
+  const choices = shuffle([currentAnswer, ...generateDistractors(currentAnswer)]);
+  const container = document.getElementById('choices');
+  container.innerHTML = '';
+  choices.forEach(val => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = val;
+    btn.onclick = () => handleAnswer(val, btn);
+    container.appendChild(btn);
+  });
+  startTimer();
+}
+
+function handleAnswer(chosen, btn) {
+  if (answered) return;
+  answered = true;
+  stopTimer();
+  const elapsed = Date.now() - questionStartTime;
+  const key = `${currentA},${currentB}`;
+  attempts[key]++;
+
+  const allBtns = document.querySelectorAll('.choice-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  const isCorrect = chosen === currentAnswer;
+  if (isCorrect) { btn.classList.add('correct'); correct++; streak++; }
+  else {
+    btn.classList.add('wrong'); streak = 0;
+    allBtns.forEach(b => { if (parseInt(b.textContent)===currentAnswer) b.classList.add('reveal'); });
+  }
+
+  total++;
+  updateWeight(key, elapsed, isCorrect);
+  renderWeakSpots();
+  renderMastered();
+
+  document.getElementById('score-correct').textContent = correct;
+  document.getElementById('score-streak').textContent = streak;
+  document.getElementById('score-total').textContent = total;
+  document.getElementById('accuracy-bar').style.width = Math.round((correct/total)*100)+'%';
+
+  showFeedback(isCorrect, elapsed);
+
+  if (!checkWin()) {
+    document.getElementById('next-btn').classList.remove('hidden');
+  }
+}
+
+function showFeedback(isCorrect, elapsed) {
+  const el = document.getElementById('feedback');
+  if (isCorrect) {
+    if (elapsed > SLOW_MS) {
+      el.textContent = `Correct, but keep practicing ${currentA}×${currentB}!`;
+      el.className = 'feedback slow-msg';
+    } else {
+      const msgs = ['Correct! 🎉','Nice work! ✓','Nailed it! ⚡','Keep it up! 🌟','Perfect! 💯'];
+      el.textContent = msgs[randInt(0,msgs.length-1)];
+      el.className = 'feedback correct-msg';
+    }
+  } else {
+    el.textContent = `${currentA} × ${currentB} = ${currentAnswer}. You'll see this again!`;
+    el.className = 'feedback wrong-msg';
+  }
+}
+
+// ── Fireworks ──────────────────────────────────────────────────────────
+const canvas = document.getElementById('fireworks-canvas');
+const ctx = canvas.getContext('2d');
+let fireworksActive = false;
+let particles = [];
+let fwAnimId = null;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function launchBurst() {
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * canvas.height * 0.6;
+  const hue = randInt(0,360);
+  for (let i=0;i<80;i++) {
+    const angle = (Math.PI*2/80)*i;
+    const speed = 2+Math.random()*5;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle)*speed,
+      vy: Math.sin(angle)*speed,
+      alpha: 1,
+      color: `hsl(${hue+randInt(-20,20)},100%,60%)`,
+      r: 1.5+Math.random()*2
     });
+  }
+}
 
+function animateFireworks() {
+  if (!fireworksActive) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.07; p.alpha -= 0.018;
+    ctx.globalAlpha = Math.max(0,p.alpha);
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  particles = particles.filter(p => p.alpha > 0);
+  fwAnimId = requestAnimationFrame(animateFireworks);
+}
+
+let burstInterval = null;
+function startFireworks() {
+  fireworksActive = true; particles = [];
+  launchBurst();
+  burstInterval = setInterval(launchBurst, 700);
+  animateFireworks();
+}
+function stopFireworks() {
+  fireworksActive = false;
+  clearInterval(burstInterval);
+  cancelAnimationFrame(fwAnimId);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function showWin() {
+  document.getElementById('win-streak').textContent = streak;
+  document.getElementById('win-overlay').classList.add('show');
+  startFireworks();
+}
+
+function resetGame() {
+  stopFireworks();
+  document.getElementById('win-overlay').classList.remove('show');
+  correct=0; total=0; streak=0;
+  masteredPairs = new Set();
+  initWeights();
+  document.getElementById('score-correct').textContent = '0';
+  document.getElementById('score-streak').textContent = '0';
+  document.getElementById('score-total').textContent = '0';
+  document.getElementById('accuracy-bar').style.width = '0%';
+  renderMastered();
+  renderWeakSpots();
+  nextQuestion();
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.key==='Enter'||e.key===' ') && !document.getElementById('next-btn').classList.contains('hidden'))
     nextQuestion();
-  </script>
+});
+
+initWeights();
+renderMastered();
+nextQuestion();
+</script>
 </body>
 </html>
