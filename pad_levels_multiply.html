@@ -340,7 +340,7 @@ h2{font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;color:#f0c040;margin-bot
       </div>
     </div>
     <p class="win-quote">"A bear always tries his best."</p>
-    <button class="play-again" onclick="resetAll()">Play Again</button>
+    <button class="play-again" onclick="resetAll()">Back to Level Map</button>
   </div>
 </div>
 
@@ -645,10 +645,7 @@ function showGrandWin(){
 function resetAll(){
   stopFireworks();
   document.getElementById('win-overlay').classList.remove('show');
-  ALL_LEVELS.forEach(l=>{progress[l.id]={stars:0,done:false};});
-  SINGLE_LEVELS.forEach((l,i)=>{l.unlocked=i===0;});
-  BRACKETS.forEach(b=>{b.unlocked=false;});
-  SINGLE_LEVELS[0].unlocked=true;
+  // Keep all progress — just go back to the level map
   renderMap();
   document.getElementById('start-screen').classList.remove('gone');
 }
