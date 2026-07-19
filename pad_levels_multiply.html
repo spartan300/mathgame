@@ -267,7 +267,7 @@ h2{font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;color:#f0c040;margin-bot
   <div class="level-map" id="level-map">
     <!-- Filled by JS -->
   </div>
-  <p style="font-size:.7rem;color:#3a5070;font-family:'Segoe UI',sans-serif;margin-bottom:6px;text-align:center;">Complete levels to unlock brackets</p>
+  <p style="font-size:.7rem;color:#3a5070;font-family:'Segoe UI',sans-serif;margin-bottom:6px;text-align:center;">Tap any level to play · earn ⭐⭐⭐ for 95% accuracy</p>
 </div>
 
 <!-- ══ GAME SCREEN ══ -->
@@ -353,15 +353,15 @@ const SINGLE_LEVELS = [2,3,4,5,6,7,8,9].map(n=>({
   id:`l${n}`, type:'single', table:n,
   label:`${n}×`, title:`Level ${n}`, subtitle:`The ${n} Times Table`,
   icon:['','','🍊','🎩','🔑','☂️','🌹','🎪','👑','🗼'][n],
-  questions:12, unlocked: n<=2
+  questions:12, unlocked:true
 }));
 const BRACKETS = [
   {id:'b25', type:'bracket', tables:[2,3,4,5], label:'2–5', title:'Lower Bracket',
-   subtitle:'2× 3× 4× 5× combined', icon:'🏰', questions:16, unlocked:false},
+   subtitle:'2× 3× 4× 5× combined', icon:'🏰', questions:16, unlocked:true},
   {id:'b69', type:'bracket', tables:[6,7,8,9], label:'6–9', title:'Upper Bracket',
-   subtitle:'6× 7× 8× 9× combined', icon:'🎡', questions:16, unlocked:false},
+   subtitle:'6× 7× 8× 9× combined', icon:'🎡', questions:16, unlocked:true},
   {id:'bfinal', type:'bracket', tables:[2,3,4,5,6,7,8,9], label:'Grand Final', title:'Grand Final',
-   subtitle:'All tables · Champion round', icon:'👑', questions:20, unlocked:false},
+   subtitle:'All tables · Champion round', icon:'👑', questions:20, unlocked:true},
 ];
 const ALL_LEVELS = [...SINGLE_LEVELS, ...BRACKETS];
 
@@ -442,43 +442,24 @@ function generateDistractors(answer){
 }
 
 // ── unlock logic ──
-function computeUnlocks(){
-  const done=id=>progress[id]?.done;
-  // single tables 3–9 unlock when previous is done
-  SINGLE_LEVELS.forEach((l,i)=>{if(i>0)l.unlocked=done(SINGLE_LEVELS[i-1].id)||l.unlocked;});
-  // lower bracket unlocks when 2,3,4,5 all done
-  BRACKETS[0].unlocked=[2,3,4,5].every(n=>done(`l${n}`));
-  // upper bracket unlocks when 6,7,8,9 all done
-  BRACKETS[1].unlocked=[6,7,8,9].every(n=>done(`l${n}`));
-  // grand final unlocks when both brackets done
-  BRACKETS[2].unlocked=done('b25')&&done('b69');
-}
-
 // ══ LEVEL MAP RENDER ══════════════════════════════════════════════════
 function renderMap(){
-  computeUnlocks();
   const map=document.getElementById('level-map');
   map.innerHTML='';
 
-  // Single level buttons
   SINGLE_LEVELS.forEach(l=>{
     const p=progress[l.id];
-    const locked=!l.unlocked;
     const btn=document.createElement('button');
-    btn.className='lvl-btn'+(locked?' locked':p.done?' done':'');
-    btn.disabled=locked;
+    btn.className='lvl-btn'+(p.done?' done':'');
     btn.innerHTML=`<span class="lvl-num">${l.icon}</span><span class="lvl-label">${l.label}</span><span class="lvl-stars">${starsStr(p.stars)}</span>`;
     btn.onclick=()=>startLevel(l);
     map.appendChild(btn);
   });
 
-  // Bracket buttons
   BRACKETS.forEach(l=>{
     const p=progress[l.id];
-    const locked=!l.unlocked;
     const btn=document.createElement('button');
-    btn.className='bracket-btn'+(locked?' locked':p.done?' done':'');
-    btn.disabled=locked;
+    btn.className='bracket-btn'+(p.done?' done':'');
     btn.innerHTML=`<div><div class="bracket-title">${l.icon} ${l.title}</div><div class="bracket-sub">${l.subtitle}</div></div><div class="bracket-icon">${starsStr(p.stars)}</div>`;
     btn.onclick=()=>startLevel(l);
     map.appendChild(btn);
