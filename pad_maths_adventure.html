@@ -183,6 +183,13 @@ h2{font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;color:#f0c040;margin-bot
   flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;
 }
 #lvl-complete.show{display:flex;}
+#walkthrough-overlay{
+  display:none;position:fixed;inset:0;z-index:150;
+  background:rgba(2,6,18,.95);
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;overflow-y:auto;
+}
+#walkthrough-overlay.show{display:flex;}
+.wt-progress{font-size:.72rem;font-weight:700;color:#4a6a90;text-transform:uppercase;letter-spacing:1px;font-family:'Segoe UI',sans-serif;margin-bottom:6px;}
 .lvl-card{
   background:#0a1628;border:2px solid #f0c040;border-radius:24px;
   padding:36px 40px;text-align:center;max-width:400px;width:100%;
@@ -389,7 +396,20 @@ h2{font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;color:#f0c040;margin-bot
     <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
     <div class="choices" id="choices"></div>
     <div class="feedback" id="feedback"></div>
+    <button class="next-btn hidden" id="walkthrough-btn" style="background:#012169;margin-top:8px;" onclick="openWalkthrough()">Show me how to solve it 🔍</button>
     <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next →</button>
+  </div>
+</div>
+
+<!-- ══ WALKTHROUGH OVERLAY ══ -->
+<div id="walkthrough-overlay">
+  <div class="lvl-card">
+    <div class="wt-progress" id="wt-progress">Step 1 of 6</div>
+    <div class="question" id="wt-step-label" style="font-size:1.1rem;min-height:44px;">—</div>
+    <div class="choices" id="wt-choices"></div>
+    <div class="feedback" id="wt-feedback"></div>
+    <button class="next-btn hidden" id="wt-next-btn">Next step →</button>
+    <button class="exit-quiz" onclick="closeWalkthrough()">✕ Skip walkthrough</button>
   </div>
 </div>
 
@@ -661,6 +681,22 @@ const LCM_GAME={
 
 // ══ SHARED FRACTION-GAME HELPERS ═════════════════════════════════════
 function pickDenomPair(params){
+  if(params.unitOnly){
+    const pool=params.denomPool;
+    return [pool[randInt(0,pool.length-1)], pool[randInt(0,pool.length-1)]];
+  }
+  if(params.sameDenom){
+    const pool=params.denomPool;
+    const d=pool[randInt(0,pool.length-1)];
+    return [d,d];
+  }
+  if(params.sharedFactorOnly){
+    for(let tries=0;tries<20;tries++){
+      const d1=randInt(4,params.denomMax), d2=randInt(4,params.denomMax);
+      if(d1!==d2 && gcd(d1,d2)>1 && d1%d2!==0 && d2%d1!==0) return [d1,d2];
+    }
+    return [8,12];
+  }
   if(params.relatedOnly){
     const pool=params.denomPool;
     const d1=pool[randInt(0,pool.length-1)];
@@ -668,7 +704,7 @@ function pickDenomPair(params){
     const d2=relatives.length&&Math.random()<0.7 ? relatives[randInt(0,relatives.length-1)] : d1;
     return [d1,d2];
   }
-  if(params.forceUnrelated){
+  if(params.forceUnrelated && (params.forceUnrelatedChance===undefined || Math.random()<params.forceUnrelatedChance)){
     for(let tries=0;tries<20;tries++){
       const d1=randInt(2,params.denomMax), d2=randInt(2,params.denomMax);
       if(d1!==d2 && lcm(d1,d2)>20) return [d1,d2];
@@ -729,26 +765,96 @@ function fracDistractorSet(correct, candidateFns){
   return out;
 }
 
+// ══ SHARED FRACTION WALKTHROUGH (Add/Subtract) ══════════════════════
+function lcmDistractors(answer){
+  const candidates=new Set();
+  for(const o of shuffle([-1,1,-2,2,-3,3,-4,4,-5,5])){
+    if(candidates.size>=3)break;
+    const v=answer+o;
+    if(v>0&&v!==answer&&v<=answer*2.5&&v>=Math.ceil(answer/2.5))candidates.add(v);
+  }
+  let guard=0;
+  while(candidates.size<3&&guard<20){guard++;const v=Math.max(1,answer+randInt(-Math.max(2,Math.ceil(answer*0.4)),Math.max(2,Math.ceil(answer*0.4))));if(v!==answer)candidates.add(v);}
+  return [...candidates].slice(0,3);
+}
+function buildFractionWalkthrough(q){
+  const {f1,f2,op}=q;
+  const steps=[];
+  const s1=simplifyFraction(f1.num,f1.den), s2=simplifyFraction(f2.num,f2.den);
+  if(gcd(f1.num,f1.den)>1){
+    steps.push({type:'simplify',label:`Can we simplify ${rawFractionStr(f1.num,f1.den)}?`,
+      correctFrac:s1, correctDisp:formatFraction(s1.num,s1.den),
+      choiceFns:[()=>({raw:rawFractionStr(f1.num,f1.den)}),()=>({num:f1.num+1,den:f1.den}),()=>({num:f1.num,den:f1.den+1})]});
+  }
+  if(gcd(f2.num,f2.den)>1){
+    steps.push({type:'simplify',label:`Can we simplify ${rawFractionStr(f2.num,f2.den)}?`,
+      correctFrac:s2, correctDisp:formatFraction(s2.num,s2.den),
+      choiceFns:[()=>({raw:rawFractionStr(f2.num,f2.den)}),()=>({num:f2.num+1,den:f2.den}),()=>({num:f2.num,den:f2.den+1})]});
+  }
+  const theLcm=lcm(f1.den,f2.den);
+  if(f1.den!==f2.den){
+    steps.push({type:'lcd',label:`What is the LCD of ${f1.den} and ${f2.den}?`,answerInt:theLcm});
+  }
+  const conv1={num:f1.num*(theLcm/f1.den),den:theLcm};
+  const conv2={num:f2.num*(theLcm/f2.den),den:theLcm};
+  if(f1.den!==theLcm){
+    steps.push({type:'convert',label:`${rawFractionStr(f1.num,f1.den)} becomes what, over ${theLcm}?`,
+      correctFrac:conv1, correctDisp:rawFractionStr(conv1.num,conv1.den),
+      choiceFns:[()=>({num:f1.num,den:theLcm}),()=>({num:conv1.num+1,den:theLcm}),()=>({num:conv1.num-1,den:theLcm})]});
+  }
+  if(f2.den!==theLcm){
+    steps.push({type:'convert',label:`${rawFractionStr(f2.num,f2.den)} becomes what, over ${theLcm}?`,
+      correctFrac:conv2, correctDisp:rawFractionStr(conv2.num,conv2.den),
+      choiceFns:[()=>({num:f2.num,den:theLcm}),()=>({num:conv2.num+1,den:theLcm}),()=>({num:conv2.num-1,den:theLcm})]});
+  }
+  const opSym=op==='+'?'+':'−';
+  const finalCorrect=simplifyFraction(q.raw.num,q.raw.den);
+  const finalWrongFns = op==='+' ? [
+    ()=>({raw:rawFractionStr(q.raw.num,q.raw.den)}),
+    ()=>({num:conv1.num+conv2.num+1,den:theLcm}),
+    ()=>({num:Math.max(1,conv1.num+conv2.num-1),den:theLcm}),
+  ] : [
+    ()=>({raw:rawFractionStr(q.raw.num,q.raw.den)}),
+    ()=>({num:Math.max(1,Math.abs(conv1.num-conv2.num)+1),den:theLcm}),
+    ()=>({num:Math.max(1,Math.abs(conv1.num-conv2.num)-1),den:theLcm}),
+  ];
+  steps.push({type:'final',label:`Now: ${rawFractionStr(conv1.num,theLcm)} ${opSym} ${rawFractionStr(conv2.num,theLcm)} = ?`,
+    correctFrac:finalCorrect, correctDisp:formatFraction(finalCorrect.num,finalCorrect.den),
+    choiceFns:finalWrongFns});
+  return steps;
+}
+
 // ══ GAME: ADD FRACTIONS ══════════════════════════════════════════════
+const FRAC_DENOM_POOL=[2,3,4,5,6,8,10];
 const ADDFRAC_LEVELS=[
-  {id:'af1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Same or related denominators',      icon:'🟢',questions:10,unlocked:true,params:{denomPool:[2,3,4,5,6,8,10],relatedOnly:true}},
-  {id:'af2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Denominators up to 12',              icon:'🟡',questions:10,unlocked:true,params:{denomMax:12}},
-  {id:'af3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Denominators up to 15, tricky LCDs', icon:'🔴',questions:12,unlocked:true,params:{denomMax:15,forceUnrelated:true}},
+  {id:'af1', tier:1,tierLabel:'Easy',  title:'Level 1', subtitle:'Unit fractions (1/a + 1/b)',                     icon:'🟢',questions:10,unlocked:true,params:{unitOnly:true,denomPool:FRAC_DENOM_POOL}},
+  {id:'af2', tier:1,tierLabel:'Easy',  title:'Level 2', subtitle:'Same denominator',                                icon:'🟢',questions:10,unlocked:true,params:{sameDenom:true,denomPool:FRAC_DENOM_POOL}},
+  {id:'af3', tier:2,tierLabel:'Medium',title:'Level 3', subtitle:'One denominator a multiple of the other',        icon:'🟡',questions:10,unlocked:true,params:{denomPool:FRAC_DENOM_POOL,relatedOnly:true}},
+  {id:'af4', tier:2,tierLabel:'Medium',title:'Level 4', subtitle:'Small denominators (2–8)',                       icon:'🟡',questions:10,unlocked:true,params:{denomMax:8}},
+  {id:'af5', tier:2,tierLabel:'Medium',title:'Level 5', subtitle:'Denominators up to 10',                          icon:'🟡',questions:10,unlocked:true,params:{denomMax:10}},
+  {id:'af6', tier:3,tierLabel:'Hard',  title:'Level 6', subtitle:'Denominators up to 12',                          icon:'🔴',questions:12,unlocked:true,params:{denomMax:12}},
+  {id:'af7', tier:3,tierLabel:'Hard',  title:'Level 7', subtitle:'Denominators up to 12, often unrelated',         icon:'🔴',questions:12,unlocked:true,params:{denomMax:12,forceUnrelated:true,forceUnrelatedChance:0.6}},
+  {id:'af8', tier:3,tierLabel:'Hard',  title:'Level 8', subtitle:'Denominators up to 15',                          icon:'🔴',questions:12,unlocked:true,params:{denomMax:15}},
+  {id:'af9', tier:4,tierLabel:'Expert',title:'Level 9', subtitle:'Denominators up to 15, tricky LCDs',             icon:'👑',questions:12,unlocked:true,params:{denomMax:15,forceUnrelated:true}},
+  {id:'af10',tier:4,tierLabel:'Expert',title:'Level 10',subtitle:'Denominators sharing a common factor',           icon:'👑',questions:14,unlocked:true,params:{denomMax:15,sharedFactorOnly:true}},
 ];
 const ADDFRAC_GAME={
   id:'addfrac', title:'Add Fractions', icon:'➕', usesWeighting:false,
+  timerMs:25000,
   menuBlurb:'1/2 + 1/4 = ? — start simple, work up to tricky denominators',
   winPrize:{icon:'🍊',name:'The Marmalade Jar of Champions',sub:"Paddington's own recipe, shared with the top adder"},
   levels:ADDFRAC_LEVELS,
   generateQuestion(level){
     const [d1,d2]=pickDenomPair(level.params);
-    const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+    const n1=level.params.unitOnly?1:randInt(1,d1-1);
+    const n2=level.params.unitOnly?1:randInt(1,d2-1);
     const f1={num:n1,den:d1}, f2={num:n2,den:d2};
     const raw=addFrac(f1,f2);
     return {f1,f2,raw,op:'+'};
   },
   formatQuestion(q){return `${rawFractionStr(q.f1.num,q.f1.den)} + ${rawFractionStr(q.f2.num,q.f2.den)} = ?`;},
   checkAnswer(q,chosenValue){return chosenValue===formatFraction(q.raw.num,q.raw.den);},
+  walkthrough(q){return buildFractionWalkthrough(q);},
   generateChoices(q){
     const correct=simplifyFraction(q.raw.num,q.raw.den);
     const correctDisp=formatFraction(q.raw.num,q.raw.den);
@@ -770,18 +876,27 @@ const ADDFRAC_GAME={
 
 // ══ GAME: SUBTRACT FRACTIONS (never negative) ═══════════════════════════
 const SUBFRAC_LEVELS=[
-  {id:'sf1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Same or related denominators',      icon:'🟢',questions:10,unlocked:true,params:{denomPool:[2,3,4,5,6,8,10],relatedOnly:true}},
-  {id:'sf2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Denominators up to 12',              icon:'🟡',questions:10,unlocked:true,params:{denomMax:12}},
-  {id:'sf3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Denominators up to 15, tricky LCDs', icon:'🔴',questions:12,unlocked:true,params:{denomMax:15,forceUnrelated:true}},
+  {id:'sf1', tier:1,tierLabel:'Easy',  title:'Level 1', subtitle:'Unit fractions (1/a − 1/b)',                     icon:'🟢',questions:10,unlocked:true,params:{unitOnly:true,denomPool:FRAC_DENOM_POOL}},
+  {id:'sf2', tier:1,tierLabel:'Easy',  title:'Level 2', subtitle:'Same denominator',                                icon:'🟢',questions:10,unlocked:true,params:{sameDenom:true,denomPool:FRAC_DENOM_POOL}},
+  {id:'sf3', tier:2,tierLabel:'Medium',title:'Level 3', subtitle:'One denominator a multiple of the other',        icon:'🟡',questions:10,unlocked:true,params:{denomPool:FRAC_DENOM_POOL,relatedOnly:true}},
+  {id:'sf4', tier:2,tierLabel:'Medium',title:'Level 4', subtitle:'Small denominators (2–8)',                       icon:'🟡',questions:10,unlocked:true,params:{denomMax:8}},
+  {id:'sf5', tier:2,tierLabel:'Medium',title:'Level 5', subtitle:'Denominators up to 10',                          icon:'🟡',questions:10,unlocked:true,params:{denomMax:10}},
+  {id:'sf6', tier:3,tierLabel:'Hard',  title:'Level 6', subtitle:'Denominators up to 12',                          icon:'🔴',questions:12,unlocked:true,params:{denomMax:12}},
+  {id:'sf7', tier:3,tierLabel:'Hard',  title:'Level 7', subtitle:'Denominators up to 12, often unrelated',         icon:'🔴',questions:12,unlocked:true,params:{denomMax:12,forceUnrelated:true,forceUnrelatedChance:0.6}},
+  {id:'sf8', tier:3,tierLabel:'Hard',  title:'Level 8', subtitle:'Denominators up to 15',                          icon:'🔴',questions:12,unlocked:true,params:{denomMax:15}},
+  {id:'sf9', tier:4,tierLabel:'Expert',title:'Level 9', subtitle:'Denominators up to 15, tricky LCDs',             icon:'👑',questions:12,unlocked:true,params:{denomMax:15,forceUnrelated:true}},
+  {id:'sf10',tier:4,tierLabel:'Expert',title:'Level 10',subtitle:'Denominators sharing a common factor',           icon:'👑',questions:14,unlocked:true,params:{denomMax:15,sharedFactorOnly:true}},
 ];
 const SUBFRAC_GAME={
   id:'subfrac', title:'Subtract Fractions', icon:'➖', usesWeighting:false,
+  timerMs:25000,
   menuBlurb:'Take one fraction from another — the answer is never negative',
   winPrize:{icon:'🎩',name:"Paddington's Sensible Hat",sub:'For adventurers who always keep their answers positive'},
   levels:SUBFRAC_LEVELS,
   generateQuestion(level){
     const [d1,d2]=pickDenomPair(level.params);
-    let n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+    let n1=level.params.unitOnly?1:randInt(1,d1-1);
+    let n2=level.params.unitOnly?1:randInt(1,d2-1);
     let f1={num:n1,den:d1}, f2={num:n2,den:d2};
     // guarantee a >= b by construction: swap if the first operand is smaller in real value
     if(fracValue(f1)<fracValue(f2)){[f1,f2]=[f2,f1];}
@@ -790,6 +905,7 @@ const SUBFRAC_GAME={
   },
   formatQuestion(q){return `${rawFractionStr(q.f1.num,q.f1.den)} − ${rawFractionStr(q.f2.num,q.f2.den)} = ?`;},
   checkAnswer(q,chosenValue){return chosenValue===formatFraction(q.raw.num,q.raw.den);},
+  walkthrough(q){return buildFractionWalkthrough(q);},
   generateChoices(q){
     const correct=simplifyFraction(q.raw.num,q.raw.den);
     const correctDisp=formatFraction(q.raw.num,q.raw.den);
@@ -994,7 +1110,8 @@ ALL_LEVELS.forEach(l=>{progress[l.id]={stars:0,done:false};});
 // ── current game state ──
 let curGame=null, curLevel=null;
 let correct=0,total=0,streak=0,qCount=0;
-let curQuestion=null, answered=false;
+let curQuestion=null, answered=false, retryMode=false;
+let walkthroughSteps=[], walkthroughIdx=0;
 
 // ══ MAIN MENU RENDER ═════════════════════════════════════════════════
 function renderMainMenu(){
@@ -1066,15 +1183,13 @@ function startLevel(level){
 }
 
 // ══ QUESTION FLOW ═════════════════════════════════════════════════════
-function nextQuestion(){
-  if(qCount>=curLevel.questions){endLevel();return;}
+function renderQuestionUI(){
   answered=false;
   clearWeather();
   document.getElementById('feedback').textContent='';
   document.getElementById('feedback').className='feedback';
   document.getElementById('next-btn').classList.add('hidden');
-
-  curQuestion=curGame.generateQuestion(curLevel);
+  document.getElementById('walkthrough-btn').classList.add('hidden');
   document.getElementById('question').innerHTML=curGame.formatQuestion(curQuestion);
 
   const choices=curGame.generateChoices(curQuestion);
@@ -1089,6 +1204,12 @@ function nextQuestion(){
   startTimer();
 }
 
+function nextQuestion(){
+  if(qCount>=curLevel.questions){endLevel();return;}
+  curQuestion=curGame.generateQuestion(curLevel);
+  renderQuestionUI();
+}
+
 function handleAnswer(choice,btn,allChoices){
   if(answered)return;
   answered=true;stopTimer();
@@ -1096,27 +1217,33 @@ function handleAnswer(choice,btn,allChoices){
   document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
 
   const ok=curGame.checkAnswer(curQuestion,choice.value);
-  if(ok){btn.classList.add('correct');correct++;streak++;}
+  if(ok){btn.classList.add('correct');if(!retryMode){correct++;streak++;}}
   else{
-    btn.classList.add('wrong');streak=0;
+    btn.classList.add('wrong');if(!retryMode)streak=0;
     const correctDisplay=allChoices.find(c=>curGame.checkAnswer(curQuestion,c.value))?.display;
     document.querySelectorAll('.choice-btn').forEach(b=>{if(b.textContent===correctDisplay)b.classList.add('reveal');});
   }
-  qCount++;total++;
-  if(curGame.usesWeighting){
-    curGame.afterAnswer(curQuestion,elapsed,ok);
-    const mc=curGame.masteredCount();
-    document.getElementById('mastered-count').textContent=`${mc.done}/${mc.total}`;
-    document.getElementById('mastered-bar').style.width=(mc.total?Math.round((mc.done/mc.total)*100):0)+'%';
-    document.getElementById('weak-spots').innerHTML=curGame.statsLine();
+  // a walkthrough retry re-asks the SAME question for practice — it was already
+  // scored (as wrong) on the first attempt, so counters/mastery must not double-count
+  document.getElementById('walkthrough-btn').classList.toggle('hidden', ok || !curGame.walkthrough || retryMode);
+  if(!retryMode){
+    qCount++;total++;
+    if(curGame.usesWeighting){
+      curGame.afterAnswer(curQuestion,elapsed,ok);
+      const mc=curGame.masteredCount();
+      document.getElementById('mastered-count').textContent=`${mc.done}/${mc.total}`;
+      document.getElementById('mastered-bar').style.width=(mc.total?Math.round((mc.done/mc.total)*100):0)+'%';
+      document.getElementById('weak-spots').innerHTML=curGame.statsLine();
+    }
+    document.getElementById('score-correct').textContent=correct;
+    document.getElementById('score-streak').textContent=streak;
+    document.getElementById('score-total').textContent=qCount;
+    document.getElementById('accuracy-bar').style.width=Math.round((correct/total)*100)+'%';
   }
-  document.getElementById('score-correct').textContent=correct;
-  document.getElementById('score-streak').textContent=streak;
-  document.getElementById('score-total').textContent=qCount;
-  document.getElementById('accuracy-bar').style.width=Math.round((correct/total)*100)+'%';
   ok?setWeather('sun'):setWeather('rain');
   showFeedback(ok,elapsed);
   document.getElementById('next-btn').classList.remove('hidden');
+  retryMode=false;
 }
 
 function showFeedback(ok,elapsed){
@@ -1139,6 +1266,75 @@ function abandonLevel(){
   renderMap(curGame.id);
 }
 
+// ══ WALKTHROUGH (opt-in, step-by-step help after a wrong answer) ════════
+function openWalkthrough(){
+  walkthroughSteps=curGame.walkthrough(curQuestion);
+  walkthroughIdx=0;
+  document.getElementById('game-wrap').style.display='none';
+  document.getElementById('walkthrough-overlay').classList.add('show');
+  renderWalkthroughStep();
+}
+function walkthroughChoices(step){
+  if(step.type==='lcd'){
+    const wrong=lcmDistractors(step.answerInt);
+    return shuffle([step.answerInt,...wrong]).map(v=>({value:v,display:`${v}`}));
+  }
+  const wrong=fracDistractorSet(step.correctFrac,step.choiceFns);
+  return shuffle([{value:step.correctDisp,display:step.correctDisp},...wrong]);
+}
+function renderWalkthroughStep(){
+  const step=walkthroughSteps[walkthroughIdx];
+  document.getElementById('wt-progress').textContent=`Step ${walkthroughIdx+1} of ${walkthroughSteps.length}`;
+  document.getElementById('wt-step-label').textContent=step.label;
+  document.getElementById('wt-feedback').textContent='';
+  document.getElementById('wt-feedback').className='feedback';
+  document.getElementById('wt-next-btn').classList.add('hidden');
+
+  const choices=walkthroughChoices(step);
+  const cont=document.getElementById('wt-choices');
+  cont.innerHTML='';
+  choices.forEach(choice=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=choice.display;
+    btn.onclick=()=>handleWalkthroughAnswer(step,choice,btn,choices);
+    cont.appendChild(btn);
+  });
+}
+function handleWalkthroughAnswer(step,choice,btn,allChoices){
+  document.querySelectorAll('#wt-choices .choice-btn').forEach(b=>b.disabled=true);
+  const correctValue=step.type==='lcd'?step.answerInt:step.correctDisp;
+  const ok=choice.value===correctValue;
+  if(ok){btn.classList.add('correct');}
+  else{
+    btn.classList.add('wrong');
+    document.querySelectorAll('#wt-choices .choice-btn').forEach(b=>{if(b.textContent===`${correctValue}`)b.classList.add('reveal');});
+  }
+  const el=document.getElementById('wt-feedback');
+  el.textContent=ok?'Quite right! 🐻':'Not quite — see the highlighted answer.';
+  el.className=ok?'feedback correct-msg':'feedback wrong-msg';
+
+  const nextBtn=document.getElementById('wt-next-btn');
+  nextBtn.classList.remove('hidden');
+  const isLastStep=walkthroughIdx>=walkthroughSteps.length-1;
+  nextBtn.textContent=isLastStep?'Try the question again →':'Next step →';
+  nextBtn.onclick=isLastStep?retryQuestionAfterWalkthrough:advanceWalkthroughStep;
+}
+function advanceWalkthroughStep(){
+  walkthroughIdx++;
+  renderWalkthroughStep();
+}
+function retryQuestionAfterWalkthrough(){
+  document.getElementById('walkthrough-overlay').classList.remove('show');
+  document.getElementById('game-wrap').style.display='block';
+  retryMode=true;
+  renderQuestionUI();
+}
+function closeWalkthrough(){
+  document.getElementById('walkthrough-overlay').classList.remove('show');
+  document.getElementById('game-wrap').style.display='block';
+  nextQuestion();
+}
+
 // ══ END LEVEL ═════════════════════════════════════════════════════════
 function endLevel(){
   stopTimer();clearWeather();
@@ -1158,9 +1354,9 @@ function endLevel(){
   document.getElementById('stat-accuracy').textContent=Math.round(acc*100)+'%';
   document.getElementById('stat-stars').textContent=starsStr(stars);
 
-  const maxTier=Math.max(...curGame.levels.map(l=>l.tier));
+  const isFinalLevel=curGame.levels[curGame.levels.length-1].id===curLevel.id;
   const nextBtn=document.getElementById('lvl-next-btn');
-  if(curLevel.tier===maxTier&&stars>=1){nextBtn.textContent='Collect your Prize! 🏆';nextBtn.onclick=showGameWin;}
+  if(isFinalLevel&&stars>=1){nextBtn.textContent='Collect your Prize! 🏆';nextBtn.onclick=showGameWin;}
   else{nextBtn.textContent='Back to Map';nextBtn.onclick=afterLevel;}
 
   document.getElementById('lvl-complete').classList.add('show');
