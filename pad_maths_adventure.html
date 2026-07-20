@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paddington's Maths Adventure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Georgia',serif;color:#f0ead8;
+  min-height:100dvh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:0;
+  background-color:#07111f;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%,rgba(1,33,105,.55) 0%,transparent 70%),
+    radial-gradient(ellipse 60% 40% at 20% 100%,rgba(200,16,46,.12) 0%,transparent 60%),
+    linear-gradient(175deg,#07111f 0%,#0c1c30 60%,#0d1a10 100%);
+}
+.screen{
+  position:fixed;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 20px;overflow-y:auto;
+  background-color:#07111f;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%,rgba(1,33,105,.55) 0%,transparent 70%),
+    linear-gradient(175deg,#07111f 0%,#0c1c30 60%,#0d1a10 100%);
+  transition:opacity .35s;
+}
+.screen.hidden{opacity:0;pointer-events:none;}
+.screen.gone{display:none;}
+
+h1{font-size:clamp(1.2rem,4vw,1.7rem);font-weight:700;color:#f0c040;margin-bottom:4px;text-shadow:0 2px 12px rgba(200,130,10,.5);}
+h2{font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;color:#f0c040;margin-bottom:8px;font-family:'Georgia',serif;}
+.subtitle{font-size:.78rem;color:#6a7a90;font-style:italic;margin-bottom:14px;text-align:center;}
+
+.roundel-wrap{margin-bottom:10px;}
+.roundel{display:inline-flex;flex-direction:column;align-items:center;position:relative;width:130px;height:44px;}
+.roundel-ring{position:absolute;inset:0;border-radius:50px;border:5px solid #C8102E;}
+.roundel-bar{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:16px;background:#012169;display:flex;align-items:center;justify-content:center;}
+.roundel-text{font-size:.6rem;font-weight:800;color:#fff;letter-spacing:1.5px;text-transform:uppercase;font-family:'Segoe UI',sans-serif;position:relative;z-index:1;}
+
+.uk-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.union-jack{width:56px;height:34px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.5);flex-shrink:0;}
+
+.bear-icon{width:80px;height:80px;margin-bottom:8px;}
+.bear-icon-sm{width:44px;height:44px;margin-bottom:4px;}
+
+.info-box{background:rgba(14,30,56,.7);border:1px solid #1a3a6a;border-radius:14px;padding:14px 18px;margin-bottom:18px;max-width:360px;width:100%;font-family:'Segoe UI',sans-serif;font-size:.82rem;color:#6a8ab0;line-height:1.6;text-align:center;}
+.info-box strong{color:#f0c040;}
+
+/* ── main menu game cards ── */
+.game-menu{display:flex;flex-direction:column;gap:12px;max-width:380px;width:100%;margin-bottom:12px;}
+.game-card{
+  background:#0d1e3a;border:2px solid #2a4a8a;border-radius:16px;
+  padding:14px 18px;cursor:pointer;font-family:'Segoe UI',sans-serif;
+  display:flex;align-items:center;gap:14px;text-align:left;
+  transition:background .15s,border-color .15s,transform .1s;
+}
+.game-card:hover{background:#122040;border-color:#f0c040;transform:translateY(-2px);}
+.game-card-icon{font-size:2.1rem;flex-shrink:0;width:44px;text-align:center;}
+.game-card-title{font-size:.98rem;font-weight:700;color:#c8dcf8;}
+.game-card-sub{font-size:.72rem;color:#4a6a90;margin-top:2px;}
+
+/* ── per-game map header ── */
+.game-map-header{display:flex;flex-direction:column;align-items:center;margin-bottom:12px;}
+.back-btn{
+  background:none;border:1px solid #2a4a8a;border-radius:10px;color:#8ab0e0;
+  font-family:'Segoe UI',sans-serif;font-size:.78rem;padding:6px 14px;
+  cursor:pointer;margin-bottom:10px;transition:background .15s,border-color .15s;
+}
+.back-btn:hover{background:#122040;border-color:#f0c040;}
+
+/* ── level map ── */
+.level-map{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:360px;width:100%;margin-bottom:18px;}
+.lvl-btn{
+  background:#0a1a30;border:2px solid #1a3a6a;border-radius:12px;
+  padding:12px 6px;cursor:pointer;font-family:'Segoe UI',sans-serif;
+  transition:background .15s,border-color .15s,transform .1s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.lvl-btn:hover:not(:disabled){background:#122040;border-color:#f0c040;transform:translateY(-2px);}
+.lvl-btn.done{border-color:#2e8b44;}
+.lvl-num{font-size:1.4rem;font-weight:800;color:#e8f0ff;}
+.lvl-label{font-size:.65rem;color:#4a6a90;font-family:'Segoe UI',sans-serif;}
+.lvl-stars{font-size:.75rem;letter-spacing:1px;}
+.diff-pill{
+  font-size:.58rem;font-weight:800;padding:2px 8px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.5px;font-family:'Segoe UI',sans-serif;
+}
+.diff-pill.easy{background:rgba(46,139,68,.25);color:#4ade80;}
+.diff-pill.medium{background:rgba(160,96,10,.25);color:#f0c040;}
+.diff-pill.hard{background:rgba(200,16,46,.2);color:#f87171;}
+.diff-pill.expert{background:rgba(240,192,64,.18);color:#f0c040;border:1px solid rgba(240,192,64,.4);}
+
+.big-btn{
+  display:block;width:100%;max-width:300px;padding:16px;
+  background:#C8102E;border:none;border-radius:16px;
+  color:#fff;font-size:1.1rem;font-weight:800;cursor:pointer;
+  letter-spacing:.5px;font-family:'Segoe UI',sans-serif;
+  transition:background .15s,transform .1s;
+  box-shadow:0 4px 24px rgba(200,16,46,.4);margin-top:4px;
+}
+.big-btn:hover{background:#a50e26;transform:translateY(-2px);}
+.big-btn:active{transform:translateY(0);}
+
+/* ── game card ── */
+#game-wrap{display:none;width:100%;max-width:480px;padding:12px 16px 20px;}
+#game-wrap.visible{display:block;}
+.card{
+  background:#0e1e38;border:2px solid #1a3a6a;border-radius:20px;
+  padding:18px 20px 22px;position:relative;
+  box-shadow:0 8px 40px rgba(0,0,0,.7);
+}
+.card::before{content:'🍊';position:absolute;top:14px;right:16px;font-size:1.2rem;opacity:.3;}
+.uk-stripe{
+  height:6px;border-radius:6px;margin-bottom:12px;
+  background:linear-gradient(90deg,#012169 0 20%,#C8102E 20% 22%,#012169 22% 39%,#fff 39% 41%,#012169 41% 59%,#fff 59% 61%,#012169 61% 78%,#C8102E 78% 80%,#012169 80% 100%);
+  box-shadow:0 1px 6px rgba(200,16,46,.25);
+}
+.level-badge{
+  text-align:center;font-size:.72rem;font-weight:700;color:#f0c040;
+  letter-spacing:1px;text-transform:uppercase;font-family:'Segoe UI',sans-serif;
+  margin-bottom:10px;
+}
+.exit-quiz{
+  display:block;text-align:center;font-size:.72rem;color:#4a6a90;
+  font-family:'Segoe UI',sans-serif;cursor:pointer;margin-bottom:10px;
+  background:none;border:none;text-decoration:underline;width:100%;
+}
+.exit-quiz:hover{color:#f87171;}
+.scoreboard{display:flex;justify-content:space-between;margin-bottom:12px;font-size:.8rem;color:#4a6a90;font-family:'Segoe UI',sans-serif;}
+.scoreboard span{font-weight:700;}
+.score-correct{color:#4ade80;}.score-streak{color:#f0c040;}
+.bar-wrap{background:#06101e;border-radius:8px;height:5px;margin-bottom:10px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:8px;transition:width .4s;}
+.bar-red{background:linear-gradient(90deg,#8b1a1a,#C8102E);}
+.bar-gold{background:linear-gradient(90deg,#a0600a,#f0c040);}
+.bar-label{font-size:.68rem;color:#3a5070;margin-bottom:4px;display:flex;justify-content:space-between;font-family:'Segoe UI',sans-serif;}
+.weak-spots{
+  background:#06101e;border:1px solid #1a2e4a;border-radius:10px;
+  padding:7px 11px;margin-bottom:12px;min-height:32px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:'Segoe UI',sans-serif;
+}
+.weak-label{font-size:.68rem;color:#3a5070;white-space:nowrap;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.weak-tag{background:#1a0a18;border:1px solid #C8102E;border-radius:6px;padding:2px 7px;font-size:.73rem;color:#fca5a5;font-weight:700;}
+.no-weak{font-size:.73rem;color:#3a5040;font-style:italic;}
+.question{
+  text-align:center;font-size:clamp(1.7rem,7.5vw,2.5rem);font-weight:800;
+  color:#e8f0ff;margin-bottom:8px;min-height:60px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Segoe UI',sans-serif;
+}
+.timer-wrap{background:#06101e;border-radius:8px;height:4px;margin-bottom:12px;overflow:hidden;}
+.timer-bar{height:100%;background:#f0c040;border-radius:8px;width:100%;}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.choice-btn{
+  background:#0a1a30;border:2px solid #1a3a6a;border-radius:14px;
+  color:#c8dcf8;font-size:clamp(1rem,4vw,1.3rem);font-weight:700;
+  padding:14px 8px;cursor:pointer;min-height:68px;
+  transition:background .15s,border-color .15s,transform .1s;
+  outline:none;font-family:'Segoe UI',sans-serif;
+}
+.choice-btn:hover:not(:disabled){background:#122040;border-color:#f0c040;transform:translateY(-2px);}
+.choice-btn:active:not(:disabled){transform:translateY(0);}
+.choice-btn.correct{background:#061a10;border-color:#2e8b44;color:#4ade80;}
+.choice-btn.wrong{background:#1a060a;border-color:#C8102E;color:#f87171;}
+.choice-btn.reveal{background:#061a10;border-color:#2e8b44;color:#4ade80;}
+.choice-btn:disabled{cursor:default;}
+.feedback{text-align:center;margin-top:12px;font-size:.88rem;font-weight:600;min-height:22px;font-family:'Segoe UI',sans-serif;font-style:italic;}
+.feedback.correct-msg{color:#4ade80;}.feedback.wrong-msg{color:#f87171;}.feedback.slow-msg{color:#f0c040;}
+.next-btn{
+  display:block;width:100%;margin-top:10px;padding:13px;
+  background:#C8102E;border:none;border-radius:14px;
+  color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
+  transition:background .15s,transform .1s;font-family:'Segoe UI',sans-serif;
+}
+.next-btn:hover{background:#a50e26;transform:translateY(-1px);}
+.next-btn.hidden{visibility:hidden;}
+
+#lvl-complete{
+  display:none;position:fixed;inset:0;z-index:150;
+  background:rgba(2,6,18,.95);
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;
+}
+#lvl-complete.show{display:flex;}
+.lvl-card{
+  background:#0a1628;border:2px solid #f0c040;border-radius:24px;
+  padding:36px 40px;text-align:center;max-width:400px;width:100%;
+  box-shadow:0 0 60px rgba(240,192,64,.2);
+}
+.uk-symbol{font-size:3.8rem;margin-bottom:8px;display:block;animation:pop .5s ease;}
+@keyframes pop{from{transform:scale(0) rotate(-20deg);}to{transform:scale(1) rotate(0);}}
+.lvl-card h2{color:#f0c040;margin-bottom:6px;}
+.lvl-card p{color:#6a8ab0;font-size:.9rem;line-height:1.7;font-style:italic;margin-bottom:16px;}
+.lvl-stats{display:flex;gap:16px;justify-content:center;margin-bottom:18px;}
+.stat-box{background:#06101e;border-radius:10px;padding:10px 16px;text-align:center;}
+.stat-num{font-size:1.8rem;font-weight:800;color:#4ade80;font-family:'Segoe UI',sans-serif;}
+.stat-lbl{font-size:.68rem;color:#4a6a90;font-family:'Segoe UI',sans-serif;}
+
+#win-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(2,6,18,.96);
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;overflow-y:auto;
+}
+#win-overlay.show{display:flex;}
+.win-card{
+  background:#0a1628;border:2px solid #f0c040;border-radius:24px;
+  padding:36px 40px;text-align:center;max-width:420px;width:100%;
+  box-shadow:0 0 70px rgba(200,16,46,.2),0 0 40px rgba(1,33,105,.4);
+}
+.win-bear-svg{width:100px;height:100px;margin:0 auto 10px;display:block;}
+.win-card h2{font-size:1.9rem;color:#f0c040;margin-bottom:8px;font-family:'Georgia',serif;}
+.win-intro{color:#6a8ab0;font-size:.9rem;margin-bottom:14px;line-height:1.7;font-style:italic;}
+.win-prize{
+  background:#06101e;border:2px solid #C8102E;border-radius:14px;
+  padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;
+}
+.prize-umbrella{font-size:2.4rem;flex-shrink:0;}
+.prize-text{text-align:left;}
+.prize-label{font-size:.62rem;color:#C8102E;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;font-family:'Segoe UI',sans-serif;}
+.prize-name{font-size:.95rem;font-weight:700;color:#e8f0ff;font-family:'Georgia',serif;}
+.prize-sub{font-size:.72rem;color:#4a6a90;font-style:italic;font-family:'Segoe UI',sans-serif;}
+.win-quote{font-size:.82rem;color:#4a6a90;font-style:italic;margin-bottom:20px;}
+.play-again{background:#C8102E;border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;padding:13px 28px;cursor:pointer;font-family:'Segoe UI',sans-serif;transition:background .15s;}
+.play-again:hover{background:#a50e26;}
+
+#weather-canvas{position:fixed;inset:0;pointer-events:none;z-index:10;}
+.umbrella-el{position:fixed;bottom:50px;right:38px;font-size:3.2rem;z-index:20;transition:opacity .4s,transform .5s;opacity:0;transform:translateY(24px);pointer-events:none;}
+.umbrella-el.show{opacity:1;transform:translateY(0);}
+#fw-canvas{position:fixed;inset:0;pointer-events:none;z-index:99;}
+</style>
+</head>
+<body>
+<!-- ══ MAIN MENU ══ -->
+<div id="main-menu" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:14px;">
+    <svg class="bear-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="18" y="10" width="64" height="10" rx="3" fill="#C8102E"/>
+      <rect x="26" y="6" width="48" height="14" rx="4" fill="#C8102E"/>
+      <rect x="30" y="4" width="40" height="6" rx="2" fill="#a50e26"/>
+      <rect x="18" y="18" width="64" height="3" rx="1" fill="#8b1a1a" opacity=".5"/>
+      <rect x="26" y="17" width="48" height="4" rx="1" fill="#f0c040" opacity=".9"/>
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/><circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6" fill="#6b3e18"/><circle cx="78" cy="36" r="6" fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/><circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/><circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M20 84 Q50 96 80 84" fill="#012169"/>
+    </svg>
+    <div class="roundel-wrap"><div class="roundel"><div class="roundel-ring"></div><div class="roundel-bar"><span class="roundel-text">PADDINGTON</span></div></div></div>
+    <div class="uk-row">
+      <svg class="union-jack" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg">
+        <rect width="60" height="36" fill="#012169"/>
+        <line x1="0" y1="0" x2="60" y2="36" stroke="white" stroke-width="7.2"/>
+        <line x1="60" y1="0" x2="0" y2="36" stroke="white" stroke-width="7.2"/>
+        <line x1="0" y1="0" x2="60" y2="36" stroke="#C8102E" stroke-width="4.8"/>
+        <line x1="60" y1="0" x2="0" y2="36" stroke="#C8102E" stroke-width="4.8"/>
+        <rect x="24" y="0" width="12" height="36" fill="white"/>
+        <rect x="0" y="12" width="60" height="12" fill="white"/>
+        <rect x="26.4" y="0" width="7.2" height="36" fill="#C8102E"/>
+        <rect x="0" y="14.4" width="60" height="7.2" fill="#C8102E"/>
+      </svg>
+      <h1>Maths Adventure</h1>
+      <span style="font-size:1.4rem;opacity:.7">☂️</span>
+    </div>
+    <p class="subtitle">Pick an adventure, dear — every level is open!</p>
+  </div>
+  <div class="game-menu" id="game-menu"><!-- filled by JS --></div>
+</div>
+
+<!-- ══ PER-GAME LEVEL MAPS ══ -->
+<div id="game-lcm-map" class="screen gone">
+  <div class="game-map-header">
+    <button class="back-btn" onclick="backToMenu()">← Menu</button>
+    <svg class="bear-icon-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/><circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6" fill="#6b3e18"/><circle cx="78" cy="36" r="6" fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/><circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/><circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1>Lowest Common Multiple</h1>
+    <p class="subtitle">Find the smallest number both can divide into</p>
+  </div>
+  <div class="level-map" id="level-map-lcm"></div>
+</div>
+
+<div id="game-addfrac-map" class="screen gone">
+  <div class="game-map-header">
+    <button class="back-btn" onclick="backToMenu()">← Menu</button>
+    <svg class="bear-icon-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/><circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6" fill="#6b3e18"/><circle cx="78" cy="36" r="6" fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/><circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/><circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1>Add Fractions</h1>
+    <p class="subtitle">Simplify your answer fully to score</p>
+  </div>
+  <div class="level-map" id="level-map-addfrac"></div>
+</div>
+
+<div id="game-subfrac-map" class="screen gone">
+  <div class="game-map-header">
+    <button class="back-btn" onclick="backToMenu()">← Menu</button>
+    <svg class="bear-icon-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/><circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6" fill="#6b3e18"/><circle cx="78" cy="36" r="6" fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/><circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/><circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1>Subtract Fractions</h1>
+    <p class="subtitle">Never negative — always simplified</p>
+  </div>
+  <div class="level-map" id="level-map-subfrac"></div>
+</div>
+
+<div id="game-mulfrac-map" class="screen gone">
+  <div class="game-map-header">
+    <button class="back-btn" onclick="backToMenu()">← Menu</button>
+    <svg class="bear-icon-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/><circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6" fill="#6b3e18"/><circle cx="78" cy="36" r="6" fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/><circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/><circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1>Multiply Fractions</h1>
+    <p class="subtitle">Cancel where you can, then simplify</p>
+  </div>
+  <div class="level-map" id="level-map-mulfrac"></div>
+</div>
+
+<div id="game-decimals-map" class="screen gone">
+  <div class="game-map-header">
+    <button class="back-btn" onclick="backToMenu()">← Menu</button>
+    <svg class="bear-icon-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="58" rx="30" ry="28" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="10" fill="#8b5e2c"/><circle cx="78" cy="36" r="10" fill="#8b5e2c"/>
+      <circle cx="22" cy="36" r="6" fill="#6b3e18"/><circle cx="78" cy="36" r="6" fill="#6b3e18"/>
+      <ellipse cx="50" cy="65" rx="18" ry="14" fill="#c8904a"/>
+      <circle cx="38" cy="52" r="5" fill="#1a0a00"/><circle cx="62" cy="52" r="5" fill="#1a0a00"/>
+      <circle cx="39.5" cy="50.5" r="1.5" fill="white"/><circle cx="63.5" cy="50.5" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="62" rx="5" ry="3.5" fill="#2c1000"/>
+      <path d="M42 68 Q50 75 58 68" stroke="#2c1000" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1>Add &amp; Subtract Decimals</h1>
+    <p class="subtitle">Line up the decimal point — never negative</p>
+  </div>
+  <div class="level-map" id="level-map-decimals"></div>
+</div>
+
+<!-- ══ SHARED QUIZ CARD ══ -->
+<div id="game-wrap">
+  <div class="card">
+    <div class="uk-stripe"></div>
+    <div class="level-badge" id="level-badge">Level — · —</div>
+    <button class="exit-quiz" onclick="abandonLevel()">✕ Leave to menu</button>
+    <div class="scoreboard">
+      <div>✓ <span class="score-correct" id="score-correct">0</span></div>
+      <div>Streak <span class="score-streak" id="score-streak">0</span> 🐻</div>
+      <div>Q <span id="score-total">0</span>/<span id="q-target">10</span></div>
+    </div>
+    <div class="bar-wrap"><div class="bar-fill bar-red" id="accuracy-bar" style="width:0%"></div></div>
+    <div class="bar-label" id="mastered-row"><span>Mastered 🍯</span><span id="mastered-count">0/0</span></div>
+    <div class="bar-wrap" id="mastered-bar-wrap"><div class="bar-fill bar-gold" id="mastered-bar" style="width:0%"></div></div>
+    <div class="weak-spots" id="weak-spots">
+      <span class="weak-label">Needs a hard stare:</span>
+      <span class="no-weak">let's find out!</span>
+    </div>
+    <div class="question" id="question">—</div>
+    <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Next →</button>
+  </div>
+</div>
+
+<!-- ══ LEVEL COMPLETE ══ -->
+<div id="lvl-complete">
+  <div class="lvl-card">
+    <span class="uk-symbol" id="lvl-symbol">🏆</span>
+    <h2 id="lvl-title">Level Complete!</h2>
+    <p id="lvl-msg">Well done, dear!</p>
+    <div class="lvl-stats">
+      <div class="stat-box"><div class="stat-num" id="stat-correct">0</div><div class="stat-lbl">Correct</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-accuracy">0%</div><div class="stat-lbl">Accuracy</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-stars">⭐</div><div class="stat-lbl">Stars</div></div>
+    </div>
+    <button class="big-btn" id="lvl-next-btn" onclick="afterLevel()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ WIN OVERLAY ══ -->
+<div id="win-overlay">
+  <div class="win-card">
+    <svg class="win-bear-svg" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="18" y="28" width="84" height="10" rx="4" fill="#C8102E"/>
+      <rect x="30" y="8" width="60" height="24" rx="5" fill="#C8102E"/>
+      <rect x="34" y="10" width="52" height="6" rx="3" fill="#a50e26" opacity=".5"/>
+      <rect x="30" y="26" width="60" height="6" rx="2" fill="#f0c040"/>
+      <ellipse cx="60" cy="78" rx="34" ry="32" fill="#8b5e2c"/>
+      <circle cx="28" cy="54" r="12" fill="#8b5e2c"/><circle cx="92" cy="54" r="12" fill="#8b5e2c"/>
+      <circle cx="28" cy="54" r="7" fill="#6b3e18"/><circle cx="92" cy="54" r="7" fill="#6b3e18"/>
+      <ellipse cx="60" cy="87" rx="21" ry="17" fill="#c8904a"/>
+      <circle cx="46" cy="70" r="6" fill="#1a0a00"/><circle cx="74" cy="70" r="6" fill="#1a0a00"/>
+      <circle cx="47.5" cy="68.5" r="2" fill="white"/><circle cx="75.5" cy="68.5" r="2" fill="white"/>
+      <ellipse cx="60" cy="82" rx="6" ry="4" fill="#2c1000"/>
+      <path d="M50 92 Q60 102 70 92" stroke="#2c1000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M26 110 Q60 124 94 110 L94 128 Q60 136 26 128 Z" fill="#012169"/>
+      <circle cx="60" cy="116" r="3" fill="#f0c040"/><circle cx="60" cy="124" r="3" fill="#f0c040"/>
+    </svg>
+    <h2 id="win-title">Champion!</h2>
+    <p class="win-intro" id="win-intro">Paddington tipped his hat. You've conquered every level!</p>
+    <div class="win-prize">
+      <span class="prize-umbrella" id="win-prize-icon">☂️</span>
+      <div class="prize-text">
+        <div class="prize-label">🏆 Prize Awarded</div>
+        <div class="prize-name" id="win-prize-name">The Windsorman Deluxe</div>
+        <div class="prize-sub" id="win-prize-sub">Hand-crafted in Mayfair · Navy &amp; Gold</div>
+      </div>
+    </div>
+    <p class="win-quote">"A bear always tries his best."</p>
+    <button class="play-again" onclick="closeWin()">Back to Level Map</button>
+  </div>
+</div>
+
+<canvas id="weather-canvas"></canvas>
+<div class="umbrella-el" id="umbrella">☂️</div>
+<canvas id="fw-canvas"></canvas>
+<script>
+// ══ GENERIC UTILS (from pad_levels_multiply.html) ══════════════════════
+function canonKey(a,b){return `${Math.min(a,b)},${Math.max(a,b)}`;}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function starsStr(n){return '⭐'.repeat(n)+'☆'.repeat(3-n);}
+
+// ══ TIMER (from pad_levels_multiply.html, now per-game duration) ════════
+const TIMER_MS=10000;
+let questionStartTime, currentTimerMs=TIMER_MS;
+function isSlow(elapsed){return elapsed>currentTimerMs*.6;}
+function startTimer(){
+  const bar=document.getElementById('timer-bar');
+  currentTimerMs=(curGame&&curGame.timerMs)||TIMER_MS;
+  bar.style.transition='none';bar.style.width='100%';bar.style.background='#f0c040';
+  questionStartTime=Date.now();
+  setTimeout(()=>{bar.style.transition=`width ${currentTimerMs}ms linear,background ${currentTimerMs*.6}ms linear`;bar.style.width='0%';bar.style.background='#C8102E';},50);
+}
+function stopTimer(){
+  const bar=document.getElementById('timer-bar');
+  const pct=Math.max(0,100-((Date.now()-questionStartTime)/currentTimerMs)*100);
+  bar.style.transition='none';bar.style.width=pct+'%';
+}
+
+// ══ WEATHER (from pad_levels_multiply.html) ═════════════════════════════
+const wCanvas=document.getElementById('weather-canvas');
+const wCtx=wCanvas.getContext('2d');
+let weatherMode='clear',drops=[],sunParticles=[],weatherAnimId=null;
+const umbrella=document.getElementById('umbrella');
+function resizeW(){wCanvas.width=window.innerWidth;wCanvas.height=window.innerHeight;}
+window.addEventListener('resize',resizeW);resizeW();
+function animateWeather(){
+  wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);
+  if(weatherMode==='rain'){
+    if(drops.length<120&&Math.random()<.7)drops.push({x:Math.random()*wCanvas.width,y:-10,len:8+Math.random()*14,speed:6+Math.random()*8,alpha:.18+Math.random()*.22});
+    wCtx.strokeStyle='#7ab8e8';wCtx.lineWidth=1.2;
+    drops.forEach(d=>{wCtx.globalAlpha=d.alpha;wCtx.beginPath();wCtx.moveTo(d.x,d.y);wCtx.lineTo(d.x-2,d.y+d.len);wCtx.stroke();d.y+=d.speed;d.x-=1.5;});
+    wCtx.globalAlpha=1;drops=drops.filter(d=>d.y<wCanvas.height+20);
+  }
+  if(weatherMode==='sun'){
+    const cx=wCanvas.width*.5,cy=80;
+    const g=wCtx.createRadialGradient(cx,cy,10,cx,cy,120);
+    g.addColorStop(0,'rgba(255,220,60,.35)');g.addColorStop(.4,'rgba(255,180,30,.12)');g.addColorStop(1,'rgba(255,160,0,0)');
+    wCtx.fillStyle=g;wCtx.beginPath();wCtx.arc(cx,cy,120,0,Math.PI*2);wCtx.fill();
+    wCtx.beginPath();wCtx.arc(cx,cy,22,0,Math.PI*2);wCtx.fillStyle='rgba(255,230,80,.7)';wCtx.fill();
+    if(sunParticles.length<60&&Math.random()<.5){const a=Math.random()*Math.PI*2,r=60+Math.random()*80;sunParticles.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,vx:Math.cos(a)*.6,vy:Math.sin(a)*.6,alpha:.7+Math.random()*.3,r:1.5+Math.random()*3,decay:.006+Math.random()*.006});}
+    sunParticles.forEach(p=>{wCtx.globalAlpha=Math.max(0,p.alpha);wCtx.beginPath();wCtx.arc(p.x,p.y,p.r,0,Math.PI*2);wCtx.fillStyle='#ffe44a';wCtx.fill();p.x+=p.vx;p.y+=p.vy;p.alpha-=p.decay;});
+    wCtx.globalAlpha=1;sunParticles=sunParticles.filter(p=>p.alpha>0);
+  }
+  weatherAnimId=requestAnimationFrame(animateWeather);
+}
+function setWeather(mode){weatherMode=mode;mode==='rain'?umbrella.classList.add('show'):umbrella.classList.remove('show');if(!weatherAnimId)animateWeather();}
+function clearWeather(){weatherMode='clear';umbrella.classList.remove('show');drops=[];sunParticles=[];wCtx.clearRect(0,0,wCanvas.width,wCanvas.height);}
+
+// ══ FIREWORKS (from pad_levels_multiply.html) ═══════════════════════════
+const fwCanvas=document.getElementById('fw-canvas');
+const fwCtx=fwCanvas.getContext('2d');
+let fwActive=false,fwParticles=[],fwAnimId=null,fwBurstInt=null,fwStopTimer=null;
+const FW_COLS=['#e8a020','#C8102E','#f5c842','#012169','#fde8c8','#4ade80','#ffffff'];
+function resizeFW(){fwCanvas.width=window.innerWidth;fwCanvas.height=window.innerHeight;}
+window.addEventListener('resize',resizeFW);resizeFW();
+function launchBurst(){
+  const x=Math.random()*fwCanvas.width,y=Math.random()*fwCanvas.height*.55;
+  const col=FW_COLS[randInt(0,FW_COLS.length-1)];
+  for(let i=0;i<80;i++){const a=(Math.PI*2/80)*i,sp=2+Math.random()*5;fwParticles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,alpha:1,color:col,r:1.5+Math.random()*2});}
+}
+function animateFW(){
+  if(!fwActive)return;
+  fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
+  fwParticles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.alpha-=.018;fwCtx.globalAlpha=Math.max(0,p.alpha);fwCtx.beginPath();fwCtx.arc(p.x,p.y,p.r,0,Math.PI*2);fwCtx.fillStyle=p.color;fwCtx.fill();});
+  fwCtx.globalAlpha=1;fwParticles=fwParticles.filter(p=>p.alpha>0);
+  fwAnimId=requestAnimationFrame(animateFW);
+}
+function startFireworks(duration){
+  fwActive=true;fwParticles=[];launchBurst();
+  fwBurstInt=setInterval(launchBurst,600);animateFW();
+  if(duration>0){clearTimeout(fwStopTimer);fwStopTimer=setTimeout(stopFireworks,duration);}
+}
+function stopFireworks(){fwActive=false;clearInterval(fwBurstInt);clearTimeout(fwStopTimer);cancelAnimationFrame(fwAnimId);fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);}
+
+// ══ FRACTION MATH HELPERS ════════════════════════════════════════════
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a||1;}
+function lcm(a,b){return Math.abs(a*b)/gcd(a,b);}
+function simplifyFraction(num,den){
+  if(den<0){num=-num;den=-den;}
+  const g=gcd(num,den);
+  return {num:num/g, den:den/g};
+}
+function fractionsEqual(f1,f2){return f1.num*f2.den===f2.num*f1.den;}
+function toMixed(num,den){
+  if(num===0)return {whole:0,num:0,den};
+  const whole=Math.floor(num/den);
+  return {whole, num:num-whole*den, den};
+}
+function formatFraction(num,den){
+  const s=simplifyFraction(num,den);
+  const m=toMixed(s.num,s.den);
+  if(m.num===0)return `${m.whole}`;
+  if(m.whole===0)return `${m.num}/${m.den}`;
+  return `${m.whole} ${m.num}/${m.den}`;
+}
+function rawFractionStr(num,den){return den===1?`${num}`:`${num}/${den}`;}
+function addFrac(f1,f2){return {num:f1.num*f2.den+f2.num*f1.den, den:f1.den*f2.den};}
+function subFrac(f1,f2){return {num:f1.num*f2.den-f2.num*f1.den, den:f1.den*f2.den};}
+function mulFrac(f1,f2){return {num:f1.num*f2.num, den:f1.den*f2.den};}
+function fracValue(f){return f.num/f.den;}
+
+// ══ DECIMAL MATH HELPERS (integer-domain, no float error) ═══════════════
+function decToInt(value,places){return Math.round(value*Math.pow(10,places));}
+function intToDecStr(intValue,places){
+  const sign = intValue<0 ? '-' : '';
+  const abs = Math.abs(intValue);
+  if(places===0)return `${sign}${abs}`;
+  const s=abs.toString().padStart(places+1,'0');
+  const whole=s.slice(0,-places), frac=s.slice(-places);
+  return `${sign}${whole}.${frac}`;
+}
+
+// ══ GAME: LOWEST COMMON MULTIPLE (weighted adaptive engine) ═════════════
+const LCM_LEVELS=[
+  {id:'lcm1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Small pairs (2–6)',           icon:'🟢',questions:10,unlocked:true,params:{numCount:2,min:2,max:6}},
+  {id:'lcm2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Pairs up to 10',              icon:'🟡',questions:10,unlocked:true,params:{numCount:2,min:2,max:10}},
+  {id:'lcm3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Bigger pairs (2–12)',         icon:'🟠',questions:10,unlocked:true,params:{numCount:2,min:2,max:12}},
+  {id:'lcm4',tier:4,tierLabel:'Expert',title:'Level 4',subtitle:'Large or co-prime pairs (6–15)',icon:'🔴',questions:12,unlocked:true,params:{numCount:2,min:6,max:15,biasCoprime:true}},
+];
+
+let lcmWeights={}, lcmAttempts={}, lcmMastered=new Set(), lcmPool=[];
+function lcmKeyOf(nums){return [...nums].sort((a,b)=>a-b).join(',');}
+function lcmBuildWeights(level){
+  lcmWeights={};lcmAttempts={};lcmMastered=new Set();lcmPool=[];
+  const {min,max}=level.params;
+  for(let a=min;a<=max;a++)for(let b=a+1;b<=max;b++){const k=lcmKeyOf([a,b]);lcmPool.push(k);lcmWeights[k]=1;lcmAttempts[k]=0;}
+}
+function lcmPick(level){
+  const avail=lcmPool.filter(k=>!lcmMastered.has(k));
+  const pool=avail.length?avail:lcmPool;
+  const sum=pool.reduce((s,k)=>s+lcmWeights[k],0);
+  let r=Math.random()*sum,chosenKey=pool[pool.length-1];
+  for(const k of pool){r-=lcmWeights[k];if(r<=0){chosenKey=k;break;}}
+  let nums=chosenKey.split(',').map(Number);
+  if(level.params.biasCoprime&&gcd(nums[0],nums[1])!==1&&Math.random()<0.5){
+    for(let tries=0;tries<5;tries++){
+      const k2=pool[randInt(0,pool.length-1)];
+      const n2=k2.split(',').map(Number);
+      if(gcd(n2[0],n2[1])===1){chosenKey=k2;nums=n2;break;}
+    }
+  }
+  return {nums,key:chosenKey};
+}
+function lcmUpdateWeight(key,elapsed,isCorrect){
+  const W_WRONG=3,W_SLOW=1.2,W_RIGHT_DEC=.55,W_MIN=.2,W_MAX=12;
+  if(!isCorrect){lcmWeights[key]=clamp(lcmWeights[key]+W_WRONG,W_MIN,W_MAX);}
+  else if(isSlow(elapsed)){lcmWeights[key]=clamp(lcmWeights[key]+W_SLOW,W_MIN,W_MAX);}
+  else{lcmWeights[key]=clamp(lcmWeights[key]*W_RIGHT_DEC,W_MIN,W_MAX);lcmMastered.add(key);}
+}
+
+const LCM_GAME={
+  id:'lcm', title:'Lowest Common Multiple', icon:'🔢', usesWeighting:true,
+  timerMs:20000,
+  menuBlurb:'Find the smallest number both can divide into',
+  winPrize:{icon:'🧭',name:"The Explorer's Compass",sub:'Guides you to the right multiple, every time'},
+  levels:LCM_LEVELS,
+  buildWeights(level){lcmBuildWeights(level);},
+  generateQuestion(level){
+    const {nums,key}=lcmPick(level);
+    const answer=nums.reduce((a,b)=>lcm(a,b));
+    return {nums,answer,key};
+  },
+  formatQuestion(q){return `LCM of ${q.nums.join(', ')}`;},
+  checkAnswer(q,chosenValue){return chosenValue===q.answer;},
+  generateChoices(q){
+    const answer=q.answer;
+    // keep every choice within a tight band of the answer's own size — avoids a set like
+    // [2, 6, 12, 18] where one option towers over a tiny one; everything should read
+    // as "plausibly the same ballpark" rather than "obviously too small/large to be right"
+    const loBound=Math.max(1,Math.ceil(answer*0.4)), hiBound=Math.ceil(answer*1.8);
+    const inRange=v=>v>0&&v!==answer&&v>=loBound&&v<=hiBound;
+    const candidates=new Set();
+    // plausible-mistake candidates first (product/gcd/a-multiple-of-the-larger-number),
+    // but only kept if they happen to land in the tight band above
+    const product=q.nums.reduce((a,b)=>a*b,1);
+    if(inRange(product))candidates.add(product);
+    const g=q.nums.reduce((a,b)=>gcd(a,b));
+    if(inRange(g))candidates.add(g);
+    const maxN=Math.max(...q.nums);
+    for(const mult of shuffle([2,3,4,5,6])){const v=maxN*mult;if(inRange(v))candidates.add(v);if(candidates.size>=3)break;}
+    // proportional offsets fill any remaining slots, evenly spread above/below the answer
+    const pcts=shuffle([.15,-.15,.3,-.3,.5,-.35,.7,-.2]);
+    for(const pct of pcts){
+      if(candidates.size>=3)break;
+      const v=Math.max(1,Math.round(answer*(1+pct)));
+      if(inRange(v))candidates.add(v);
+    }
+    // last-resort small integer offsets, only used if the band above still isn't full
+    for(const o of shuffle([-1,1,-2,2,-3,3,-4,4])){if(candidates.size>=3)break;const v=answer+o;if(inRange(v))candidates.add(v);}
+    let guard=0;
+    while(candidates.size<3&&guard<20){guard++;const v=Math.max(1,answer+randInt(-Math.max(2,Math.ceil(answer*0.3)),Math.max(2,Math.ceil(answer*0.3))));if(v!==answer)candidates.add(v);}
+    const distractors=[...candidates].slice(0,3);
+    const vals=shuffle([answer,...distractors]);
+    return vals.map(v=>({value:v,display:`${v}`}));
+  },
+  afterAnswer(q,elapsed,ok){lcmAttempts[q.key]++;lcmUpdateWeight(q.key,elapsed,ok);},
+  statsLine(){
+    const seen=Object.entries(lcmAttempts).filter(([,n])=>n>0).sort((a,b)=>lcmWeights[b[0]]-lcmWeights[a[0]]);
+    const weak=seen.filter(([k])=>lcmWeights[k]>=2).slice(0,5);
+    if(!weak.length){const msg=seen.length===0?"let's find out!":'good show — keep going!';return `<span class="weak-label">Needs a hard stare:</span><span class="no-weak">${msg}</span>`;}
+    let html='<span class="weak-label">Needs a hard stare:</span>';
+    for(const[k] of weak)html+=`<span class="weak-tag">${k.split(',').join('·')}</span>`;
+    return html;
+  },
+  masteredCount(){return {done:lcmMastered.size,total:lcmPool.length};},
+};
+
+// ══ SHARED FRACTION-GAME HELPERS ═════════════════════════════════════
+function pickDenomPair(params){
+  if(params.relatedOnly){
+    const pool=params.denomPool;
+    const d1=pool[randInt(0,pool.length-1)];
+    const relatives=pool.filter(d=>d!==d1&&(d1%d===0||d%d1===0));
+    const d2=relatives.length&&Math.random()<0.7 ? relatives[randInt(0,relatives.length-1)] : d1;
+    return [d1,d2];
+  }
+  if(params.forceUnrelated){
+    for(let tries=0;tries<20;tries++){
+      const d1=randInt(2,params.denomMax), d2=randInt(2,params.denomMax);
+      if(d1!==d2 && lcm(d1,d2)>20) return [d1,d2];
+    }
+    return [12,14];
+  }
+  return [randInt(2,params.denomMax), randInt(2,params.denomMax)];
+}
+function fracDistractorSet(correct, candidateFns){
+  const correctVal=fracValue(correct)||0.0001;
+  // reject any candidate whose real value is wildly bigger/smaller than the answer —
+  // an "unsimplified result" (e.g. 6/8 for 3/4) is fine since it's the SAME value,
+  // but a wrong-LCD or straight-across mistake can occasionally land far outside a
+  // sensible range and read as an obvious outlier next to the other three choices
+  const loBound=correctVal*0.35, hiBound=correctVal*2.2||1;
+  const seen=new Set([formatFraction(correct.num,correct.den)]);
+  const out=[];
+  for(const fn of candidateFns){
+    if(out.length>=3)break;
+    try{
+      const c=fn();
+      if(!c) continue;
+      if(c.raw!==undefined){ // pre-formatted, unsimplified display (always same value as correct)
+        if(!seen.has(c.raw)){seen.add(c.raw);out.push({value:c.raw,display:c.raw});}
+        continue;
+      }
+      if(c.num===undefined||c.den===0||c.den===undefined)continue;
+      if(c.num<0)continue; // no negative distractors ever
+      const v=c.num/c.den;
+      if(v<loBound||v>hiBound)continue;
+      const disp=formatFraction(c.num,c.den);
+      if(!seen.has(disp)){seen.add(disp);out.push({value:disp,display:disp});}
+    }catch(e){/* skip invalid candidate */}
+  }
+  // fallback: nudge the correct value up/down by a modest percentage; vary both the
+  // denominator and the percentage across attempts so repeated collisions (common
+  // with small denominators, where many nudges simplify back to the same fraction)
+  // can't stall the loop before it reaches 3 unique distractors
+  const pcts=[0.15,-0.15,0.3,-0.25,0.4,-0.1,0.55,-0.35,0.75,-0.2];
+  let guard=0;
+  while(out.length<3 && guard<60){
+    const den=correct.den+(guard%4); // den, den+1, den+2, den+3, repeat
+    const pct=pcts[guard%pcts.length];
+    guard++;
+    const targetVal=Math.max(1/den,correctVal*(1+pct));
+    const dn=Math.max(1,Math.round(targetVal*den));
+    const disp=formatFraction(dn,den);
+    if(!seen.has(disp)){seen.add(disp);out.push({value:disp,display:disp});}
+  }
+  // absolute last resort: tiny integer nudges on the correct pair, expanding the
+  // radius until 3 unique values are found (guarantees termination)
+  let radius=1;
+  while(out.length<3 && radius<50){
+    const disp=formatFraction(correct.num+radius,correct.den);
+    if(!seen.has(disp)){seen.add(disp);out.push({value:disp,display:disp});}
+    radius++;
+  }
+  return out;
+}
+
+// ══ GAME: ADD FRACTIONS ══════════════════════════════════════════════
+const ADDFRAC_LEVELS=[
+  {id:'af1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Same or related denominators',      icon:'🟢',questions:10,unlocked:true,params:{denomPool:[2,3,4,5,6,8,10],relatedOnly:true}},
+  {id:'af2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Denominators up to 12',              icon:'🟡',questions:10,unlocked:true,params:{denomMax:12}},
+  {id:'af3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Denominators up to 15, tricky LCDs', icon:'🔴',questions:12,unlocked:true,params:{denomMax:15,forceUnrelated:true}},
+];
+const ADDFRAC_GAME={
+  id:'addfrac', title:'Add Fractions', icon:'➕', usesWeighting:false,
+  menuBlurb:'1/2 + 1/4 = ? — start simple, work up to tricky denominators',
+  winPrize:{icon:'🍊',name:'The Marmalade Jar of Champions',sub:"Paddington's own recipe, shared with the top adder"},
+  levels:ADDFRAC_LEVELS,
+  generateQuestion(level){
+    const [d1,d2]=pickDenomPair(level.params);
+    const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+    const f1={num:n1,den:d1}, f2={num:n2,den:d2};
+    const raw=addFrac(f1,f2);
+    return {f1,f2,raw,op:'+'};
+  },
+  formatQuestion(q){return `${rawFractionStr(q.f1.num,q.f1.den)} + ${rawFractionStr(q.f2.num,q.f2.den)} = ?`;},
+  checkAnswer(q,chosenValue){return chosenValue===formatFraction(q.raw.num,q.raw.den);},
+  generateChoices(q){
+    const correct=simplifyFraction(q.raw.num,q.raw.den);
+    const correctDisp=formatFraction(q.raw.num,q.raw.den);
+    const fns=[
+      ()=>({raw:rawFractionStr(q.raw.num,q.raw.den)}), // unsimplified result
+      ()=>({num:q.f1.num+q.f2.num, den:q.f1.den+q.f2.den}), // add straight across
+      ()=>{ // wrong LCD: use d1*d2 instead of true lcm
+        const wrongDen=q.f1.den*q.f2.den;
+        const trueLcm=lcm(q.f1.den,q.f2.den);
+        if(wrongDen===trueLcm)return null;
+        return {num:q.f1.num*q.f2.den+q.f2.num*q.f1.den, den:wrongDen};
+      },
+    ];
+    const wrong=fracDistractorSet(correct,fns);
+    const choices=shuffle([{value:correctDisp,display:correctDisp},...wrong]);
+    return choices;
+  },
+};
+
+// ══ GAME: SUBTRACT FRACTIONS (never negative) ═══════════════════════════
+const SUBFRAC_LEVELS=[
+  {id:'sf1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Same or related denominators',      icon:'🟢',questions:10,unlocked:true,params:{denomPool:[2,3,4,5,6,8,10],relatedOnly:true}},
+  {id:'sf2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Denominators up to 12',              icon:'🟡',questions:10,unlocked:true,params:{denomMax:12}},
+  {id:'sf3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Denominators up to 15, tricky LCDs', icon:'🔴',questions:12,unlocked:true,params:{denomMax:15,forceUnrelated:true}},
+];
+const SUBFRAC_GAME={
+  id:'subfrac', title:'Subtract Fractions', icon:'➖', usesWeighting:false,
+  menuBlurb:'Take one fraction from another — the answer is never negative',
+  winPrize:{icon:'🎩',name:"Paddington's Sensible Hat",sub:'For adventurers who always keep their answers positive'},
+  levels:SUBFRAC_LEVELS,
+  generateQuestion(level){
+    const [d1,d2]=pickDenomPair(level.params);
+    let n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+    let f1={num:n1,den:d1}, f2={num:n2,den:d2};
+    // guarantee a >= b by construction: swap if the first operand is smaller in real value
+    if(fracValue(f1)<fracValue(f2)){[f1,f2]=[f2,f1];}
+    const raw=subFrac(f1,f2); // always >= 0 by the swap above
+    return {f1,f2,raw,op:'-'};
+  },
+  formatQuestion(q){return `${rawFractionStr(q.f1.num,q.f1.den)} − ${rawFractionStr(q.f2.num,q.f2.den)} = ?`;},
+  checkAnswer(q,chosenValue){return chosenValue===formatFraction(q.raw.num,q.raw.den);},
+  generateChoices(q){
+    const correct=simplifyFraction(q.raw.num,q.raw.den);
+    const correctDisp=formatFraction(q.raw.num,q.raw.den);
+    const fns=[
+      ()=>({raw:rawFractionStr(q.raw.num,q.raw.den)}), // unsimplified result
+      ()=>({num:Math.abs(q.f1.num-q.f2.num), den:Math.abs(q.f1.den-q.f2.den)||1}), // subtract straight across
+      ()=>{ // wrong LCD
+        const wrongDen=q.f1.den*q.f2.den;
+        const trueLcm=lcm(q.f1.den,q.f2.den);
+        if(wrongDen===trueLcm)return null;
+        const num=q.f1.num*q.f2.den-q.f2.num*q.f1.den;
+        if(num<0)return null; // never offer a negative distractor
+        return {num, den:wrongDen};
+      },
+    ];
+    const wrong=fracDistractorSet(correct,fns);
+    return shuffle([{value:correctDisp,display:correctDisp},...wrong]);
+  },
+};
+
+// ══ DECIMAL DISTRACTOR HELPER ════════════════════════════════════════
+function decDistractorSet(correctStr, candidateFns){
+  const correctVal=parseFloat(correctStr);
+  // reject any candidate wildly bigger/smaller than the answer (e.g. an accidental
+  // x10 place-shift) so the four options read as one plausible cluster, not
+  // three tiny numbers plus one outlier ten times the size
+  const loBound=Math.max(0,correctVal*0.4), hiBound=correctVal*1.8||1;
+  const seen=new Set([correctStr]);
+  const out=[];
+  for(const fn of candidateFns){
+    if(out.length>=3)break;
+    try{
+      const s=fn();
+      if(s===null||s===undefined)continue;
+      if(s.startsWith('-'))continue; // no negative distractors ever
+      const v=parseFloat(s);
+      if(v<loBound||v>hiBound)continue;
+      if(!seen.has(s)){seen.add(s);out.push({value:s,display:s});}
+    }catch(e){/* skip invalid candidate */}
+  }
+  const places=(correctStr.split('.')[1]||'').length;
+  const step=places>0?1/Math.pow(10,places):1;
+  const pcts=[0.1,-0.1,0.2,-0.2,0.3,-0.15,0.45,-0.25,0.6,-0.3];
+  let guard=0;
+  while(out.length<3 && guard<50){
+    // step widens by (guard/pcts.length) so repeated collisions can't loop forever —
+    // each full pass through the pct list nudges further from the answer
+    const widen=1+Math.floor(guard/pcts.length)*0.5;
+    const pct=pcts[guard%pcts.length]*widen;
+    guard++;
+    let perturbedVal=Math.max(step,correctVal*(1+pct));
+    let perturbed=perturbedVal.toFixed(Math.max(places,1)).replace(/0+$/,'').replace(/\.$/,'');
+    if(perturbed.startsWith('-'))continue;
+    if(!seen.has(perturbed)){seen.add(perturbed);out.push({value:perturbed,display:perturbed});}
+  }
+  let radius=1;
+  while(out.length<3 && radius<50){
+    const perturbed=(correctVal+radius*step).toFixed(Math.max(places,1)).replace(/0+$/,'').replace(/\.$/,'');
+    if(!seen.has(perturbed)){seen.add(perturbed);out.push({value:perturbed,display:perturbed});}
+    radius++;
+  }
+  return out;
+}
+
+// ══ GAME: MULTIPLY FRACTIONS ═════════════════════════════════════════
+const MULFRAC_LEVELS=[
+  {id:'mf1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Simple fractions (denominators 2–6)',      icon:'🟢',questions:10,unlocked:true,params:{numMax:5,denomMax:6,mixed:false}},
+  {id:'mf2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Larger fractions (denominators up to 12)', icon:'🟡',questions:10,unlocked:true,params:{numMax:10,denomMax:12,mixed:false}},
+  {id:'mf3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Mixed numbers',                            icon:'🔴',questions:12,unlocked:true,params:{numMax:8,denomMax:10,mixed:true,wholeMax:3}},
+];
+function randProperFraction(denomMax){
+  const den=randInt(2,denomMax);
+  const num=randInt(1,den-1);
+  return {num,den};
+}
+function randMixedAsImproper(wholeMax,denomMax){
+  const den=randInt(2,denomMax);
+  const whole=randInt(0,wholeMax);
+  const num=randInt(1,den-1);
+  return {num: whole*den+num, den, whole, fracNum:num}; // improper pair + display parts
+}
+const MULFRAC_GAME={
+  id:'mulfrac', title:'Multiply Fractions', icon:'✖️', usesWeighting:false,
+  menuBlurb:'1/2 × 1/4 = ? — cancel first, then simplify',
+  winPrize:{icon:'🔑',name:"Paddington's Brass Key",sub:'Unlocks the door to Windsor Gardens'},
+  levels:MULFRAC_LEVELS,
+  generateQuestion(level){
+    const {numMax,denomMax,mixed,wholeMax}=level.params;
+    let f1,f2,disp1,disp2;
+    if(mixed){
+      const m1=randMixedAsImproper(wholeMax,denomMax);
+      f1={num:m1.num,den:m1.den}; disp1=m1.whole===0?`${m1.fracNum}/${m1.den}`:`${m1.whole} ${m1.fracNum}/${m1.den}`;
+      f2=randProperFraction(denomMax); disp2=`${f2.num}/${f2.den}`;
+    } else {
+      const d1=randInt(2,denomMax);
+      let n1=randInt(1,Math.min(numMax,d1-1))||1;
+      f1={num:n1,den:d1}; disp1=`${f1.num}/${f1.den}`;
+      let n2;
+      if(Math.random()<0.4){
+        const shared=[...Array(d1-1).keys()].map(i=>i+1).filter(x=>gcd(x,d1)>1);
+        n2 = shared.length ? shared[randInt(0,shared.length-1)] : randInt(1,Math.min(numMax,denomMax-1))||1;
+      } else {
+        n2=randInt(1,Math.min(numMax,denomMax-1))||1;
+      }
+      const d2=randInt(Math.max(2,n2+1),denomMax);
+      f2={num:n2,den:d2}; disp2=`${f2.num}/${f2.den}`;
+    }
+    const raw=mulFrac(f1,f2);
+    return {f1,f2,raw,disp1,disp2};
+  },
+  formatQuestion(q){return `${q.disp1} × ${q.disp2} = ?`;},
+  checkAnswer(q,chosenValue){return chosenValue===formatFraction(q.raw.num,q.raw.den);},
+  generateChoices(q){
+    const correct=simplifyFraction(q.raw.num,q.raw.den);
+    const correctDisp=formatFraction(q.raw.num,q.raw.den);
+    const fns=[
+      ()=>({raw:rawFractionStr(q.raw.num,q.raw.den)}), // unsimplified product
+      ()=>addFrac(q.f1,q.f2), // added instead of multiplied
+      ()=>{ // cross-multiplied wrong
+        if(q.f1.num===0||q.f2.num===0)return null;
+        return {num:q.f1.num*q.f2.den, den:q.f1.den*q.f2.num};
+      },
+    ];
+    const wrong=fracDistractorSet(correct,fns);
+    return shuffle([{value:correctDisp,display:correctDisp},...wrong]);
+  },
+};
+
+// ══ GAME: ADD / SUBTRACT DECIMALS (never negative) ══════════════════════
+const DECIMAL_LEVELS=[
+  {id:'dec1',tier:1,tierLabel:'Easy',  title:'Level 1',subtitle:'Tenths, add only',                     icon:'🟢',questions:10,unlocked:true,params:{placesMin:1,placesMax:1,ops:['add']}},
+  {id:'dec2',tier:2,tierLabel:'Medium',title:'Level 2',subtitle:'Hundredths, add & subtract',            icon:'🟡',questions:10,unlocked:true,params:{placesMin:2,placesMax:2,ops:['add','subtract']}},
+  {id:'dec3',tier:3,tierLabel:'Hard',  title:'Level 3',subtitle:'Thousandths, add & subtract',           icon:'🟠',questions:12,unlocked:true,params:{placesMin:3,placesMax:3,ops:['add','subtract']}},
+  {id:'dec4',tier:4,tierLabel:'Expert',title:'Level 4',subtitle:'Mixed decimal places (e.g. 1.5 + 0.25)',icon:'🔴',questions:12,unlocked:true,params:{placesMin:1,placesMax:3,ops:['add','subtract']}},
+];
+function randDecInt(places){return randInt(1, places===1?95:places===2?995:9995);}
+const DECIMAL_GAME={
+  id:'decimals', title:'Add & Subtract Decimals', icon:'🔟', usesWeighting:false,
+  menuBlurb:'Line up the decimal point — answers are never negative',
+  winPrize:{icon:'☂️',name:'The Windsorman Deluxe (Decimal Edition)',sub:'Precisely calibrated to the thousandth of an inch'},
+  levels:DECIMAL_LEVELS,
+  generateQuestion(level){
+    const {placesMin,placesMax,ops}=level.params;
+    const placesB=randInt(placesMin,placesMax);
+    const placesDelta=randInt(placesMin,placesMax);
+    const commonPlaces=Math.max(placesB,placesDelta);
+    const op=ops[randInt(0,ops.length-1)];
+    const bInt=randDecInt(placesB)*Math.pow(10,commonPlaces-placesB);
+    const deltaInt=randDecInt(placesDelta)*Math.pow(10,commonPlaces-placesDelta);
+    // a = b + delta guarantees a >= b at commonPlaces resolution, so subtraction never goes negative
+    const aInt=bInt+deltaInt;
+    const bStr=intToDecStr(bInt,commonPlaces), aStr=intToDecStr(aInt,commonPlaces);
+    if(op==='add'){
+      const sumInt=aInt+bInt;
+      return {aInt,bInt,commonPlaces,op,resultInt:sumInt,aStr,bStr};
+    } else {
+      const diffInt=aInt-bInt; // guaranteed >= 0 by construction
+      return {aInt,bInt,commonPlaces,op,resultInt:diffInt,aStr,bStr};
+    }
+  },
+  formatQuestion(q){
+    const symbol=q.op==='add'?'+':'−';
+    return `${q.aStr} ${symbol} ${q.bStr} = ?`;
+  },
+  checkAnswer(q,chosenValue){return chosenValue===intToDecStr(q.resultInt,q.commonPlaces);},
+  generateChoices(q){
+    const correctStr=intToDecStr(q.resultInt,q.commonPlaces);
+    const fns=[
+      ()=>{ // misaligned addition: shift result display by one extra place
+        const rawSum=q.aInt+q.bInt;
+        return intToDecStr(rawSum, q.commonPlaces+1);
+      },
+      ()=>{ // off-by-one decimal place
+        const shifted = q.op==='add' ? q.resultInt*10 : Math.floor(q.resultInt/10);
+        return intToDecStr(shifted, q.commonPlaces);
+      },
+      ()=>{ // wrong-operation slip
+        const other = q.op==='add' ? Math.abs(q.aInt-q.bInt) : q.aInt+q.bInt;
+        return intToDecStr(other, q.commonPlaces);
+      },
+    ];
+    const wrong=decDistractorSet(correctStr,fns);
+    return shuffle([{value:correctStr,display:correctStr},...wrong]);
+  },
+};
+
+// ══ GAMES REGISTRY ═══════════════════════════════════════════════════
+const GAMES=[LCM_GAME,ADDFRAC_GAME,SUBFRAC_GAME,MULFRAC_GAME,DECIMAL_GAME];
+const ALL_LEVELS=GAMES.flatMap(g=>g.levels.map(l=>({...l,gameId:g.id})));
+
+const TIER_LABEL_CLASS={1:'easy',2:'medium',3:'hard',4:'expert'};
+const UK_SYMBOLS=[
+  {sym:'🏰',name:'Tower of London'},{sym:'🌉',name:'Tower Bridge'},{sym:'👑',name:'Crown Jewels'},
+  {sym:'🎡',name:'London Eye'},{sym:'🏛️',name:'Buckingham Palace'},{sym:'☂️',name:'The Windsorman Deluxe'},
+  {sym:'🍊',name:'Paddington Station'},{sym:'🎪',name:'Covent Garden'},{sym:'🗼',name:'Big Ben'},{sym:'🌹',name:'English Rose'},
+];
+
+// ── progress store (kept in memory only, resets on reload) ──
+let progress={};
+ALL_LEVELS.forEach(l=>{progress[l.id]={stars:0,done:false};});
+
+// ── current game state ──
+let curGame=null, curLevel=null;
+let correct=0,total=0,streak=0,qCount=0;
+let curQuestion=null, answered=false;
+
+// ══ MAIN MENU RENDER ═════════════════════════════════════════════════
+function renderMainMenu(){
+  const menu=document.getElementById('game-menu');
+  menu.innerHTML='';
+  GAMES.forEach(g=>{
+    const card=document.createElement('button');
+    card.className='game-card';
+    card.innerHTML=`<span class="game-card-icon">${g.icon}</span><div><div class="game-card-title">${g.title}</div><div class="game-card-sub">${g.menuBlurb}</div></div>`;
+    card.onclick=()=>openGame(g.id);
+    menu.appendChild(card);
+  });
+}
+function openGame(gameId){
+  curGame=GAMES.find(g=>g.id===gameId);
+  document.getElementById('main-menu').classList.add('gone');
+  document.getElementById(`game-${gameId}-map`).classList.remove('gone');
+  renderMap(gameId);
+}
+function backToMenu(){
+  GAMES.forEach(g=>document.getElementById(`game-${g.id}-map`).classList.add('gone'));
+  document.getElementById('main-menu').classList.remove('gone');
+}
+
+// ══ PER-GAME LEVEL MAP RENDER ═════════════════════════════════════════
+function renderMap(gameId){
+  const game=GAMES.find(g=>g.id===gameId);
+  const map=document.getElementById(`level-map-${gameId}`);
+  map.innerHTML='';
+  game.levels.forEach(l=>{
+    const p=progress[l.id];
+    const btn=document.createElement('button');
+    btn.className='lvl-btn'+(p.done?' done':'');
+    const pillClass=TIER_LABEL_CLASS[l.tier]||'easy';
+    btn.innerHTML=`<span class="lvl-num">${l.icon}</span><span class="diff-pill ${pillClass}">${l.tierLabel}</span><span class="lvl-label">${l.title}</span><span class="lvl-stars">${starsStr(p.stars)}</span>`;
+    btn.onclick=()=>startLevel({...l,gameId});
+    map.appendChild(btn);
+  });
+}
+
+// ══ START A LEVEL ═════════════════════════════════════════════════════
+function startLevel(level){
+  curLevel=level;
+  correct=0;total=0;streak=0;qCount=0;
+  clearWeather();
+
+  document.getElementById(`game-${curGame.id}-map`).classList.add('gone');
+  document.getElementById('game-wrap').style.display='block';
+
+  const weightedUI=!!curGame.usesWeighting;
+  document.getElementById('mastered-row').style.display=weightedUI?'flex':'none';
+  document.getElementById('mastered-bar-wrap').style.display=weightedUI?'block':'none';
+  document.getElementById('weak-spots').style.display=weightedUI?'flex':'none';
+  if(weightedUI){
+    curGame.buildWeights(level);
+    const mc=curGame.masteredCount();
+    document.getElementById('mastered-count').textContent=`${mc.done}/${mc.total}`;
+    document.getElementById('mastered-bar').style.width='0%';
+    document.getElementById('weak-spots').innerHTML=curGame.statsLine();
+  }
+
+  document.getElementById('level-badge').textContent=`${level.title} · ${level.subtitle}`;
+  document.getElementById('q-target').textContent=level.questions;
+  document.getElementById('score-correct').textContent='0';
+  document.getElementById('score-streak').textContent='0';
+  document.getElementById('score-total').textContent='0';
+  document.getElementById('accuracy-bar').style.width='0%';
+  nextQuestion();
+}
+
+// ══ QUESTION FLOW ═════════════════════════════════════════════════════
+function nextQuestion(){
+  if(qCount>=curLevel.questions){endLevel();return;}
+  answered=false;
+  clearWeather();
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.add('hidden');
+
+  curQuestion=curGame.generateQuestion(curLevel);
+  document.getElementById('question').innerHTML=curGame.formatQuestion(curQuestion);
+
+  const choices=curGame.generateChoices(curQuestion);
+  const cont=document.getElementById('choices');
+  cont.innerHTML='';
+  choices.forEach(choice=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=choice.display;
+    btn.onclick=()=>handleAnswer(choice,btn,choices);
+    cont.appendChild(btn);
+  });
+  startTimer();
+}
+
+function handleAnswer(choice,btn,allChoices){
+  if(answered)return;
+  answered=true;stopTimer();
+  const elapsed=Date.now()-questionStartTime;
+  document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+
+  const ok=curGame.checkAnswer(curQuestion,choice.value);
+  if(ok){btn.classList.add('correct');correct++;streak++;}
+  else{
+    btn.classList.add('wrong');streak=0;
+    const correctDisplay=allChoices.find(c=>curGame.checkAnswer(curQuestion,c.value))?.display;
+    document.querySelectorAll('.choice-btn').forEach(b=>{if(b.textContent===correctDisplay)b.classList.add('reveal');});
+  }
+  qCount++;total++;
+  if(curGame.usesWeighting){
+    curGame.afterAnswer(curQuestion,elapsed,ok);
+    const mc=curGame.masteredCount();
+    document.getElementById('mastered-count').textContent=`${mc.done}/${mc.total}`;
+    document.getElementById('mastered-bar').style.width=(mc.total?Math.round((mc.done/mc.total)*100):0)+'%';
+    document.getElementById('weak-spots').innerHTML=curGame.statsLine();
+  }
+  document.getElementById('score-correct').textContent=correct;
+  document.getElementById('score-streak').textContent=streak;
+  document.getElementById('score-total').textContent=qCount;
+  document.getElementById('accuracy-bar').style.width=Math.round((correct/total)*100)+'%';
+  ok?setWeather('sun'):setWeather('rain');
+  showFeedback(ok,elapsed);
+  document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function showFeedback(ok,elapsed){
+  const el=document.getElementById('feedback');
+  const correctMsgs=["Quite right! 🐻","Splendid! 🍊","Nailed it! ⚡","Bravo! 🎩","Excellent! 💛"];
+  const slowMsgs=["Correct, but a bit slow!","Right — but quicker next time! 🍯","You got it — nearly in time! ☂️"];
+  const wrongMsgs=["Not quite, dear. Paddington stares. 😠","Have another hard stare and try again next time!","Close — but not the marmalade-sandwich answer. 🐻"];
+  if(ok){
+    if(isSlow(elapsed)){el.textContent=slowMsgs[randInt(0,slowMsgs.length-1)];el.className='feedback slow-msg';}
+    else{el.textContent=correctMsgs[randInt(0,correctMsgs.length-1)];el.className='feedback correct-msg';}
+  } else {
+    el.textContent=wrongMsgs[randInt(0,wrongMsgs.length-1)];el.className='feedback wrong-msg';
+  }
+}
+
+function abandonLevel(){
+  stopTimer();clearWeather();
+  document.getElementById('game-wrap').style.display='none';
+  document.getElementById(`game-${curGame.id}-map`).classList.remove('gone');
+  renderMap(curGame.id);
+}
+
+// ══ END LEVEL ═════════════════════════════════════════════════════════
+function endLevel(){
+  stopTimer();clearWeather();
+  document.getElementById('game-wrap').style.display='none';
+
+  const acc=total>0?correct/total:0;
+  const stars=acc>=.95?3:acc>=.7?2:acc>=.5?1:0;
+  progress[curLevel.id]={stars,done:stars>=1};
+
+  const idx=curGame.levels.findIndex(l=>l.id===curLevel.id);
+  const sym=UK_SYMBOLS[idx%UK_SYMBOLS.length];
+
+  document.getElementById('lvl-symbol').textContent=sym.sym;
+  document.getElementById('lvl-title').textContent=`${curLevel.title} Complete!`;
+  document.getElementById('lvl-msg').textContent=stars===3?`${sym.name} unlocked! Paddington is delighted.`:stars>=1?`Well done! ${sym.name} noted in your passport.`:`Nearly there — try again to earn your stars!`;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-accuracy').textContent=Math.round(acc*100)+'%';
+  document.getElementById('stat-stars').textContent=starsStr(stars);
+
+  const maxTier=Math.max(...curGame.levels.map(l=>l.tier));
+  const nextBtn=document.getElementById('lvl-next-btn');
+  if(curLevel.tier===maxTier&&stars>=1){nextBtn.textContent='Collect your Prize! 🏆';nextBtn.onclick=showGameWin;}
+  else{nextBtn.textContent='Back to Map';nextBtn.onclick=afterLevel;}
+
+  document.getElementById('lvl-complete').classList.add('show');
+  startFireworks(4000);
+}
+
+function afterLevel(){
+  stopFireworks();
+  document.getElementById('lvl-complete').classList.remove('show');
+  document.getElementById(`game-${curGame.id}-map`).classList.remove('gone');
+  renderMap(curGame.id);
+}
+
+function showGameWin(){
+  stopFireworks();
+  document.getElementById('lvl-complete').classList.remove('show');
+  const prize=curGame.winPrize;
+  document.getElementById('win-title').textContent=`Champion of ${curGame.title}!`;
+  document.getElementById('win-intro').innerHTML=`Paddington tipped his hat.<br>You've conquered every level and earned<br>a very special prize:`;
+  document.getElementById('win-prize-icon').textContent=prize.icon;
+  document.getElementById('win-prize-name').textContent=prize.name;
+  document.getElementById('win-prize-sub').textContent=prize.sub;
+  document.getElementById('win-overlay').classList.add('show');
+  startFireworks(0);
+}
+
+function closeWin(){
+  stopFireworks();
+  document.getElementById('win-overlay').classList.remove('show');
+  document.getElementById(`game-${curGame.id}-map`).classList.remove('gone');
+  renderMap(curGame.id);
+}
+
+// ══ INIT ══════════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===' ')&&!document.getElementById('next-btn').classList.contains('hidden'))nextQuestion();
+});
+renderMainMenu();
+</script>
+</body>
+</html>
